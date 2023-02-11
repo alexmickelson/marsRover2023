@@ -5,3 +5,5 @@
 # Docs
 
 https://github.com/SnowSE/mars_rover
+
+[server](https://snow-rover.azurewebsites.net/)

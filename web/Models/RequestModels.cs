@@ -20,6 +20,13 @@ public record StatusResult(
   string status
 );
 
+public enum Orientation {
+  North,
+  South,
+  East,
+  West
+}
+
 public record JoinResponse(
   string Token,
   int StartingRow,
@@ -28,7 +35,7 @@ public record JoinResponse(
   int TargetColumn,
   Neighbor[] Neighbors,
   LowResolutionMap[] LowResolutionMap,
-  string Orientation
+  Orientation Orientation
 );
 
 public record Neighbor(

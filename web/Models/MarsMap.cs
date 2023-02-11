@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 public class MarsMap
 {
   public ConcurrentDictionary<(int, int), int> Grid { get; private set; }
+  public (int, int) TopRight { get; set; } = (0, 0);
 
   public MarsMap()
   {
@@ -12,7 +13,7 @@ public class MarsMap
 
   public MarsMap(IEnumerable<LowResolutionMap> lowResMap, IEnumerable<Neighbor>? neighbors = null)
   {
-    Grid = createEmptyGrid(lowResMap);
+    (Grid, TopRight) = createEmptyGrid(lowResMap);
     setLowResMapValues(lowResMap);
 
     if (neighbors != null)
@@ -29,7 +30,7 @@ public class MarsMap
     }
   }
 
-  private ConcurrentDictionary<(int, int), int> createEmptyGrid(
+  private (ConcurrentDictionary<(int, int), int>, (int, int)) createEmptyGrid(
     IEnumerable<LowResolutionMap> lowResMap
   )
   {
@@ -41,7 +42,7 @@ public class MarsMap
       foreach (var c in Range(0, columns + 1))
         newGrid[(r, c)] = 0;
 
-    return newGrid;
+    return (newGrid, (rows, columns));
   }
 
   private void setLowResMapValues(IEnumerable<LowResolutionMap> lowResMap)

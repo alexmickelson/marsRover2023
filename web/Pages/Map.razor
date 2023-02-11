@@ -1,0 +1,113 @@
+@using static System.Linq.Enumerable
+@inject GamePlayer game
+
+@* @using Blazor.Extensions;
+@using Blazor.Extensions.Canvas
+@using Blazor.Extensions.Canvas.Canvas2D; *@
+
+
+@* <BECanvas Width="@game.Map.TopRight.Item1" Height="game.Map.TopRight.Item2" @ref="_canvasReference"></BECanvas>
+
+@code {
+private Canvas2DContext _context;
+
+protected BECanvasComponent _canvasReference;
+
+protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+this._context = await this._canvasReference.CreateCanvas2DAsync();
+await this._context.SetFillStyleAsync("white");
+
+await this._context.FillRectAsync(0, 0, 500, 500);
+if (game.Map != null)
+{
+System.Console.WriteLine("filling");
+
+foreach (var row in Range(0, game.Map.TopRight.Item1 + 1))
+{
+foreach (var col in Range(0, game.Map.TopRight.Item2 + 1))
+{
+var r = game.Map.Grid[(row, col)] / 2;
+await this._context.SetFillStyleAsync("rgba(" + r + ",0,0,255)");
+await this._context.FillRectAsync(row, col, 1, 1);
+}
+}
+System.Console.WriteLine("done filling");
+}
+} *@
+@code {
+  public Dictionary<int, string> Colors = new Dictionary<int, string>() {
+{0, "bg-rose-50"},
+{1, "bg-rose-50"},
+{2, "bg-rose-50"},
+{3, "bg-rose-100"},
+{4, "bg-rose-100"},
+{5, "bg-rose-100"},
+{6, "bg-rose-200"},
+{7, "bg-rose-200"},
+{8, "bg-rose-200"},
+{9, "bg-rose-300"},
+{10, "bg-rose-300"},
+{11, "bg-rose-300"},
+{12, "bg-rose-400"},
+{13, "bg-rose-400"},
+{14, "bg-rose-400"},
+{15, "bg-rose-500"},
+{16, "bg-rose-500"},
+{17, "bg-rose-500"},
+{18, "bg-rose-600"},
+{19, "bg-rose-600"},
+{20, "bg-rose-600"},
+{21, "bg-rose-700"},
+{22, "bg-rose-700"},
+{23, "bg-rose-700"},
+{24, "bg-rose-800"},
+{25, "bg-rose-800"},
+{26, "bg-rose-800"},
+{27, "bg-rose-900"},
+{28, "bg-rose-900"},
+{29, "bg-rose-900"},
+{30, "bg-rose-900"},
+{31, "bg-rose-900"},
+{32, "bg-rose-900"},
+{33, "bg-rose-900"},
+{34, "bg-rose-900"},
+{35, "bg-rose-900"},
+{36, "bg-rose-900"},
+{37, "bg-rose-900"},
+{38, "bg-rose-900"},
+};
+}
+<style>
+  .cell {
+    height: 1px;
+    width: 1px;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+  }
+
+  .my-row {
+    height: 1px;
+    margin: 0;
+    padding: 0;
+  }
+</style>
+
+@if (game.Map != null)
+{
+  <div class="px-auto">
+
+
+    @foreach (var row in Range(0, game.Map.TopRight.Item1 + 1))
+      {
+        <div class="my-row">
+          @foreach (var col in Range(0, game.Map.TopRight.Item2 + 1))
+          {
+            <div class=@("cell " + Colors[game.Map.Grid[(row, col)] / 10])>
+            </div>
+          }
+        </div>
+      }
+  </div>
+}
