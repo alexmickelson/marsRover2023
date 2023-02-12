@@ -14,7 +14,6 @@ public class Helpers
       new Neighbor(0, 1, 4),
       new Neighbor(1, 1, 2)
     };
-    // neighbors.Should().BeEquivalentTo(expectedNeighbors);
     Assert.That(neighbors, Is.EquivalentTo(expectedNeighbors));
   }
 
@@ -48,7 +47,7 @@ public class Helpers
     var game = new GamePlayer(mockService);
 
     await game.Register("testGame");
-    game.CalculatePath(game.Map.Grid, game.Target, game.Map.TopRight);
+    game.CalculateDetailedPath();
     return game;
   }
 

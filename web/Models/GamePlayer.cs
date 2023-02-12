@@ -8,6 +8,10 @@ public class GamePlayer
   public (int, int) CurrentLocation { get; private set; } = default;
   public (int, int) Target { get; private set; } = default;
 
+  public (int, int) LowResCurrentLocation { get; private set; } = default;
+  public (int, int) LowResTarget { get; private set; } = default;
+  public IEnumerable<(int, int)> LowResPath { get; set; }
+
   public GamePlayer(IGameService gameService)
   {
     this.gameService = gameService;
@@ -19,8 +23,18 @@ public class GamePlayer
     gameService.GameId = gameId;
     var response = await gameService.JoinGame();
     Map = new MarsMap(response.LowResolutionMap, response.Neighbors);
+
     CurrentLocation = (response.StartingRow, response.StartingColumn);
     Target = (response.TargetRow, response.TargetColumn);
+
+    LowResCurrentLocation = (
+      response.StartingRow / Map.LowResScaleFactor,
+      response.StartingColumn / Map.LowResScaleFactor
+    );
+    LowResTarget = (
+      response.TargetRow / Map.LowResScaleFactor,
+      response.TargetColumn / Map.LowResScaleFactor
+    );
 
     System.Console.WriteLine("Registered for game");
   }
@@ -31,17 +45,38 @@ public class GamePlayer
     (int, int)? PreviousLocation
   );
 
-  public void CalculatePath(
+  public void CalculateDetailedPath()
+  {
+    if (Map == null)
+      throw new NullReferenceException("map cannot be null in detailed path");
+    Path = calculatePath(Map.Grid, CurrentLocation, Target, Map.TopRight);
+  }
+
+  public void CalculateLowResPath()
+  {
+    if (Map == null)
+      throw new NullReferenceException("map cannot be null in detailed path");
+
+    LowResPath = calculatePath(
+      Map.LowResGrid,
+      LowResCurrentLocation,
+      LowResTarget,
+      Map.LowResTopRight
+    );
+  }
+
+  private static IEnumerable<(int, int)> calculatePath(
     ConcurrentDictionary<(int, int), int> grid,
+    (int, int) currentLocation,
     (int, int) target,
     (int, int) topRight
   )
   {
     var (currentCheckLocation, locationPaths) =
-      initializeBreadthFirstDataStructures(CurrentLocation);
+      initializeBreadthFirstDataStructures(currentLocation);
     var locationsToProcess = new List<PathHistory>();
 
-    while (currentCheckLocation != Target)
+    while (currentCheckLocation != target)
     {
       addNewNeighborsToList(
         grid,
@@ -59,7 +94,7 @@ public class GamePlayer
       currentCheckLocation = historyEntry.Location;
     }
 
-    Path = reconstructPathFromHistory(locationPaths, Target);
+    return reconstructPathFromHistory(locationPaths, target);
   }
 
   private static (
