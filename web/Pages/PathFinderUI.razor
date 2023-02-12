@@ -24,10 +24,10 @@
   {
     <div class="text-sm">
 
-      @foreach (var location in game.Path)
-      {
-        <div>@location</div>
-      }
+      Path Steps: @game.Path.Count()
     </div>
+    <div>
+    Path Cost: @game.Map.CalculatePathCost(game.Path);
+  </div>
   }
 </div>

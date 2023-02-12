@@ -31,6 +31,11 @@ public class MarsMap
     }
   }
 
+  public int CalculatePathCost(IEnumerable<(int, int)> path)
+  {
+    return path.Select(l => Grid[l]).Sum();
+  }
+
   private void initializeLowResData(IEnumerable<LowResolutionMap> lowResMap)
   {
     LowResGrid = new();
