@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using static System.Linq.Enumerable;
 
 public class GamePlayer
 {
@@ -86,8 +87,8 @@ public class GamePlayer
         locationPaths,
         locationsToProcess
       );
-      PathHistory historyEntry = getAndRemoveSmallestLocation(
-        ref locationsToProcess
+      (var historyEntry, locationsToProcess) = getAndRemoveSmallestLocation(
+        locationsToProcess
       );
 
       locationPaths[historyEntry.Location] = historyEntry;
@@ -107,14 +108,14 @@ public class GamePlayer
     return (currentCheckLocation, locationPaths);
   }
 
-  private static PathHistory getAndRemoveSmallestLocation(
-    ref List<PathHistory> locationsToProcess
+  private static (PathHistory, List<PathHistory>) getAndRemoveSmallestLocation(
+    List<PathHistory> locationsToProcess
   )
   {
     locationsToProcess = locationsToProcess.OrderBy(h => h.Cost).ToList();
     var historyEntry = locationsToProcess[0];
     locationsToProcess.RemoveAt(0);
-    return historyEntry;
+    return (historyEntry, locationsToProcess);
   }
 
   private static IEnumerable<(int, int)> reconstructPathFromHistory(
@@ -163,6 +164,25 @@ public class GamePlayer
 
   public void OptimizeGrid()
   {
-    throw new NotImplementedException();
+    CalculateLowResPath();
+
+    var newGrid = new ConcurrentDictionary<(int, int), int>();
+
+    var detailedLocationsInLowResPath = new List<(int, int)>();
+
+    foreach (var lowResLocation in LowResPath)
+    {
+      var startingRow = lowResLocation.Item1 * Map.LowResScaleFactor;
+      var startingColumn = lowResLocation.Item2 * Map.LowResScaleFactor;
+      foreach (var row in Range(startingRow, Map.LowResScaleFactor))
+      {
+        foreach (var col in Range(startingColumn, Map.LowResScaleFactor))
+        {
+          newGrid[(row, col)] = Map.Grid[(row, col)];
+        }
+      }
+    }
+
+    Map.OptimizedGrid = newGrid;
   }
 }

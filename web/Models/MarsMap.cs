@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 public class MarsMap
 {
   public ConcurrentDictionary<(int, int), int> Grid { get; private set; }
+  public ConcurrentDictionary<(int, int), int> OptimizedGrid { get; set; }
   public ConcurrentDictionary<(int, int), int> LowResGrid { get; private set; }
   public IEnumerable<LowResolutionMap> LowResolutionMaps { get; private set; }
   public int LowResScaleFactor { get; set; }

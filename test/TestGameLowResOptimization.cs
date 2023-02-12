@@ -14,15 +14,29 @@ public class TestGameLowResOptimization
       new LowResolutionMap(
         LowerLeftRow: 0,
         LowerLeftColumn: 0,
-        UpperRightRow: 2,
-        UpperRightColumn: 2,
+        UpperRightRow: 1,
+        UpperRightColumn: 1,
         AverageDifficulty: 5
       ),
       new LowResolutionMap(
         LowerLeftRow: 0,
-        LowerLeftColumn: 3,
-        UpperRightRow: 2,
-        UpperRightColumn: 5,
+        LowerLeftColumn: 2,
+        UpperRightRow: 0,
+        UpperRightColumn: 3,
+        AverageDifficulty: 5
+      ),
+      new LowResolutionMap(
+        LowerLeftRow: 2,
+        LowerLeftColumn: 0,
+        UpperRightRow: 3,
+        UpperRightColumn: 1,
+        AverageDifficulty: 5
+      ),
+      new LowResolutionMap(
+        LowerLeftRow: 2,
+        LowerLeftColumn: 2,
+        UpperRightRow: 4,
+        UpperRightColumn: 4,
         AverageDifficulty: 5
       )
     };
@@ -34,6 +48,6 @@ public class TestGameLowResOptimization
     );
 
     game.OptimizeGrid();
-    game.Map.Grid.Count().Should().Be(4);
+    game.Map.OptimizedGrid.Count().Should().Be(4);
   }
 }
