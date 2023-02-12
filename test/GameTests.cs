@@ -216,7 +216,7 @@ public class GameTests
           AverageDifficulty: averageDifficulty + 10
         )
       },
-      Orientation: Orientation.East
+      Orientation: "East"
     );
     var gameServiceMock = new Mock<IGameService>();
     gameServiceMock

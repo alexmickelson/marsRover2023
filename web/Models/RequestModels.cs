@@ -1,4 +1,6 @@
 
+using System.ComponentModel.DataAnnotations;
+
 public record MoveResponse(
   int Row,
   int Column,
@@ -20,12 +22,6 @@ public record StatusResult(
   string status
 );
 
-public enum Orientation {
-  North,
-  South,
-  East,
-  West
-}
 
 public record JoinResponse(
   string Token,
@@ -34,8 +30,9 @@ public record JoinResponse(
   int TargetRow,
   int TargetColumn,
   Neighbor[] Neighbors,
-  LowResolutionMap[] LowResolutionMap,
-  Orientation Orientation
+  LowResolutionMap[] LowResolutionMap, 
+  [property: RegularExpression("North|South|East|West")]
+  string Orientation 
 );
 
 public record Neighbor(
