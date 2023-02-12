@@ -3,13 +3,21 @@
 @code {
   public async Task CalculatePath()
   {
-    System.Console.WriteLine("Starting Path Calculation");
+    System.Console.WriteLine("Started Path Calculation");
     game.CalculateDetailedPath();
     System.Console.WriteLine("Ended Path Calculation");
+  }
+
+  public void OptimiseGrid()
+  {
+    System.Console.WriteLine("Started Grid Optimization");
+    game.OptimizeGrid();
+    System.Console.WriteLine("Ended Grid Optimization");
   }
 }
 
 <div>
+  <button class="@(Styles.Btn) m-3" onclick="@OptimiseGrid">Optimise Grid</button>
   <button class="@(Styles.Btn) m-3" onclick="@CalculatePath">Calculate Path</button>
 
   @if (game.Path != null)

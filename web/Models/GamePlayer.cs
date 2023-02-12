@@ -50,7 +50,22 @@ public class GamePlayer
   {
     if (Map == null)
       throw new NullReferenceException("map cannot be null in detailed path");
-    Path = calculatePath(Map.Grid, CurrentLocation, Target, Map.TopRight);
+
+    if (Map.OptimizedGrid != null)
+    {
+      System.Console.WriteLine("total cells");
+      System.Console.WriteLine(Map.OptimizedGrid.Count());
+      Path = calculatePath(
+        Map.OptimizedGrid,
+        CurrentLocation,
+        Target,
+        Map.TopRight
+      );
+    }
+    else
+    {
+      Path = calculatePath(Map.Grid, CurrentLocation, Target, Map.TopRight);
+    }
   }
 
   public void CalculateLowResPath()
@@ -77,6 +92,8 @@ public class GamePlayer
       initializeBreadthFirstDataStructures(currentLocation);
     var locationsToProcess = new List<PathHistory>();
 
+    var visisted = new List<(int, int)>();
+
     while (currentCheckLocation != target)
     {
       addNewNeighborsToList(
@@ -90,6 +107,8 @@ public class GamePlayer
       (var historyEntry, locationsToProcess) = getAndRemoveSmallestLocation(
         locationsToProcess
       );
+
+      System.Console.WriteLine(historyEntry);
 
       locationPaths[historyEntry.Location] = historyEntry;
       currentCheckLocation = historyEntry.Location;
@@ -113,6 +132,9 @@ public class GamePlayer
   )
   {
     locationsToProcess = locationsToProcess.OrderBy(h => h.Cost).ToList();
+    if (locationsToProcess.Count() == 0)
+      throw new Exception("Ran out of locations to search");
+
     var historyEntry = locationsToProcess[0];
     locationsToProcess.RemoveAt(0);
     return (historyEntry, locationsToProcess);
@@ -150,7 +172,12 @@ public class GamePlayer
     );
 
     var orderedNeighbors = neighbors
-      .Where(n => !locationPaths.ContainsKey(n))
+      .Where(
+        n =>
+          !locationPaths.ContainsKey(n)
+          && locationsToCheck.Find(l => l.Location == n) == null
+          && grid.ContainsKey(n)
+      )
       .OrderBy((l) => grid[l]);
 
     var currentCost = grid[currentCheckLocation];
@@ -182,6 +209,18 @@ public class GamePlayer
         }
       }
     }
+
+    Map.Grid.Keys
+      .Where(
+        (l) =>
+          (Math.Abs(Target.Item1 - l.Item1) < 10)
+          && (Math.Abs(Target.Item2 - l.Item2) < 10)
+      )
+      .ToList()
+      .ForEach(k => {
+        if(!newGrid.ContainsKey(k))
+          newGrid[k] = Map.Grid[k];
+      });
 
     Map.OptimizedGrid = newGrid;
   }
