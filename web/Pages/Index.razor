@@ -3,20 +3,30 @@
 
 @code {
   public string gameId { get; set; } = "";
-
+  public string name { get; set; } = "Test_Alex";
+  public async Task Register()
+  {
+    await game.Register(gameId, name);
+  }
 }
 
 <PageTitle>Index</PageTitle>
 <div class="container mx-auto">
 
-  <div>
-    <label>Game ID:</label>
-    <input type="text" class="rounded bg-slate-600 p-1 m-1" @bind='gameId' />
-  </div>
+  <form @onsubmit:preventDefault="true" @onsubmit="Register">
+    <div>
+      <label>Game ID:</label>
+      <input type="text" class="rounded bg-slate-600 p-1 m-1" @bind='gameId' />
+    </div>
+    <div>
+      <label>Name:</label>
+      <input type="text" class="rounded bg-slate-600 p-1 m-1" @bind='name' />
+    </div>
 
-  <button class="@(Styles.Btn)" @onclick="@(() => game.Register(gameId))">
-    Register for Game
-  </button>
+    <button class="@(Styles.Btn)">
+      Register for Game
+    </button>
+  </form>
 </div>
 
 @if (game.Map != null)
@@ -25,7 +35,7 @@
   Current Location: @game.CurrentLocation, Target: @game.Target
 </div>
   <div class="flex">
-    <PathFinderUI />
+    <ControlUI />
     <Map />
   </div>
 }

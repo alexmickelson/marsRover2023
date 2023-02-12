@@ -14,11 +14,20 @@
     game.OptimizeGrid();
     System.Console.WriteLine("Ended Grid Optimization");
   }
+
+  public async Task FollowPath()
+  {
+    System.Console.WriteLine("Started Following Path");
+    await game.FollowPath();
+    System.Console.WriteLine("Ended Following Path");
+  }
 }
 
 <div>
-  <button class="@(Styles.Btn) m-3" onclick="@OptimiseGrid">Optimise Grid</button>
-  <button class="@(Styles.Btn) m-3" onclick="@CalculatePath">Calculate Path</button>
+
+  <button class="@(Styles.Btn) m-3" @onclick="OptimiseGrid">Optimise Grid</button>
+  <button class="@(Styles.Btn) m-3" @onclick="CalculatePath">Calculate Path</button>
+  <button class="@(Styles.Btn) m-3" @onclick="FollowPath">Follow Path</button>
 
   @if (game.Path != null)
   {
@@ -27,7 +36,10 @@
       Path Steps: @game.Path.Count()
     </div>
     <div>
-    Path Cost: @game.Map.CalculatePathCost(game.Path);
+    Path Cost: @game.Map.CalculatePathCost(game.Path)
+  </div>
+    <div>
+    Battery: @game.Battery
   </div>
   }
 </div>

@@ -48,6 +48,6 @@ public class TestGameLowResOptimization
     );
 
     game.OptimizeGrid();
-    game.Map.OptimizedGrid.Count().Should().Be(4);
+    game.Map.OptimizedGrid.Count().Should().Be(25);
   }
 }

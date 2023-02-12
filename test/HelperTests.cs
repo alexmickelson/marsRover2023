@@ -81,7 +81,9 @@ public class Helpers
       Orientation: "East"
     );
     var gameServiceMock = new Mock<IGameService>();
-    gameServiceMock.Setup(s => s.JoinGame()).ReturnsAsync(gameResponse);
+    gameServiceMock
+      .Setup(s => s.JoinGame(It.IsAny<string>()))
+      .ReturnsAsync(gameResponse);
     var mockService = gameServiceMock.Object;
     return mockService;
   }

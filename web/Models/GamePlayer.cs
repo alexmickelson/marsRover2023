@@ -13,16 +13,22 @@ public class GamePlayer
   public (int, int) LowResTarget { get; private set; } = default;
   public IEnumerable<(int, int)> LowResPath { get; set; }
 
+  public int Battery { get; set; }
+  public string Orientation { get; set; }
+
   public GamePlayer(IGameService gameService)
   {
     this.gameService = gameService;
   }
 
-  public async Task Register(string gameId)
+  public async Task Register(string gameId, string name = "Test_Alex")
   {
     System.Console.WriteLine("Registering");
     gameService.GameId = gameId;
-    var response = await gameService.JoinGame();
+    var response = await gameService.JoinGame(name);
+    Battery = 2000;
+    Orientation = response.Orientation;
+
     Map = new MarsMap(response.LowResolutionMap, response.Neighbors);
 
     CurrentLocation = (response.StartingRow, response.StartingColumn);
@@ -40,12 +46,6 @@ public class GamePlayer
     System.Console.WriteLine("Registered for game");
   }
 
-  record PathHistory(
-    int Cost,
-    (int, int) Location,
-    (int, int)? PreviousLocation
-  );
-
   public void CalculateDetailedPath()
   {
     if (Map == null)
@@ -55,7 +55,7 @@ public class GamePlayer
     {
       System.Console.WriteLine("total cells");
       System.Console.WriteLine(Map.OptimizedGrid.Count());
-      Path = calculatePath(
+      Path = MarsMap.CalculatePath(
         Map.OptimizedGrid,
         CurrentLocation,
         Target,
@@ -64,7 +64,12 @@ public class GamePlayer
     }
     else
     {
-      Path = calculatePath(Map.Grid, CurrentLocation, Target, Map.TopRight);
+      Path = MarsMap.CalculatePath(
+        Map.Grid,
+        CurrentLocation,
+        Target,
+        Map.TopRight
+      );
     }
   }
 
@@ -73,120 +78,12 @@ public class GamePlayer
     if (Map == null)
       throw new NullReferenceException("map cannot be null in detailed path");
 
-    LowResPath = calculatePath(
+    LowResPath = MarsMap.CalculatePath(
       Map.LowResGrid,
       LowResCurrentLocation,
       LowResTarget,
       Map.LowResTopRight
     );
-  }
-
-  private static IEnumerable<(int, int)> calculatePath(
-    ConcurrentDictionary<(int, int), int> grid,
-    (int, int) currentLocation,
-    (int, int) target,
-    (int, int) topRight
-  )
-  {
-    var (currentCheckLocation, locationPaths) =
-      initializeBreadthFirstDataStructures(currentLocation);
-    var locationsToProcess = new List<PathHistory>();
-
-    var visisted = new List<(int, int)>();
-
-    while (currentCheckLocation != target)
-    {
-      addNewNeighborsToList(
-        grid,
-        currentCheckLocation,
-        target,
-        topRight,
-        locationPaths,
-        locationsToProcess
-      );
-      (var historyEntry, locationsToProcess) = getAndRemoveSmallestLocation(
-        locationsToProcess
-      );
-
-      System.Console.WriteLine(historyEntry);
-
-      locationPaths[historyEntry.Location] = historyEntry;
-      currentCheckLocation = historyEntry.Location;
-    }
-
-    return reconstructPathFromHistory(locationPaths, target);
-  }
-
-  private static (
-    (int, int),
-    Dictionary<(int, int), PathHistory>
-  ) initializeBreadthFirstDataStructures((int, int) currentCheckLocation)
-  {
-    var locationPaths = new Dictionary<(int, int), PathHistory>();
-    locationPaths[currentCheckLocation] = new(0, currentCheckLocation, null);
-    return (currentCheckLocation, locationPaths);
-  }
-
-  private static (PathHistory, List<PathHistory>) getAndRemoveSmallestLocation(
-    List<PathHistory> locationsToProcess
-  )
-  {
-    locationsToProcess = locationsToProcess.OrderBy(h => h.Cost).ToList();
-    if (locationsToProcess.Count() == 0)
-      throw new Exception("Ran out of locations to search");
-
-    var historyEntry = locationsToProcess[0];
-    locationsToProcess.RemoveAt(0);
-    return (historyEntry, locationsToProcess);
-  }
-
-  private static IEnumerable<(int, int)> reconstructPathFromHistory(
-    Dictionary<(int, int), PathHistory> locationPaths,
-    (int, int) destination
-  )
-  {
-    List<(int, int)> path = new List<(int, int)>() { destination };
-    var previous = locationPaths[destination].PreviousLocation;
-    while (previous != null)
-    {
-      var notNullPrevious = ((int, int))previous;
-      path.Add(notNullPrevious);
-      previous = locationPaths[notNullPrevious].PreviousLocation;
-    }
-    return path.ToArray().Reverse();
-  }
-
-  private static void addNewNeighborsToList(
-    ConcurrentDictionary<(int, int), int> grid,
-    (int, int) currentCheckLocation,
-    (int, int) target,
-    (int, int) topRight,
-    Dictionary<(int, int), PathHistory> locationPaths,
-    List<PathHistory> locationsToCheck
-  )
-  {
-    List<(int, int)> neighbors = MarsMap.GetNeighbors(
-      currentCheckLocation,
-      target,
-      topRight
-    );
-
-    var orderedNeighbors = neighbors
-      .Where(
-        n =>
-          !locationPaths.ContainsKey(n)
-          && locationsToCheck.Find(l => l.Location == n) == null
-          && grid.ContainsKey(n)
-      )
-      .OrderBy((l) => grid[l]);
-
-    var currentCost = grid[currentCheckLocation];
-    foreach (var n in orderedNeighbors)
-    {
-      var nextCost = grid[n] + currentCost;
-      var historyEntry = new PathHistory(nextCost, n, currentCheckLocation);
-      locationsToCheck.Add(historyEntry);
-    }
   }
 
   public void OptimizeGrid()
@@ -217,11 +114,67 @@ public class GamePlayer
           && (Math.Abs(Target.Item2 - l.Item2) < 10)
       )
       .ToList()
-      .ForEach(k => {
-        if(!newGrid.ContainsKey(k))
+      .ForEach(k =>
+      {
+        if (!newGrid.ContainsKey(k))
           newGrid[k] = Map.Grid[k];
       });
 
     Map.OptimizedGrid = newGrid;
+  }
+
+  public async Task FollowPath()
+  {
+    while (Path.Count() > 0)
+    {
+      var nextLocation = Path.First();
+      Path = Path.Skip(1);
+      var rowOffset = CurrentLocation.Item1 - nextLocation.Item1;
+      var colOffset = CurrentLocation.Item2 - CurrentLocation.Item2;
+      System.Console.WriteLine(rowOffset);
+      System.Console.WriteLine(colOffset);
+
+      var desiredOrientation = (rowOffset, colOffset) switch
+      {
+        (0, 1) => "East",
+        (0, -1) => "West",
+        (1, 0) => "North",
+        (-1, 0) => "South",
+      };
+
+      MoveResponse response;
+      if (Orientation != desiredOrientation)
+      {
+        var turnLeft =
+          (Orientation == "East" && desiredOrientation == "North")
+          || (Orientation == "North" && desiredOrientation == "West")
+          || (Orientation == "West" && desiredOrientation == "South")
+          || (Orientation == "South" && desiredOrientation == "East");
+        if (turnLeft)
+          response = await gameService.Move(Direction.Left);
+        else
+          response = await gameService.Move(Direction.Right);
+      }
+      else
+      {
+        response = await gameService.Move(Direction.Forward);
+      }
+
+      Battery = response.BatteryLevel;
+      Orientation = response.Orientation;
+      System.Console.WriteLine("resposne message: ");
+      System.Console.WriteLine(response.Message);
+
+      if (response.Row != Path.First().Item1)
+        System.Console.WriteLine(
+          $"Got back a different row than we tried to get to. wanted {Path.First().Item1}, got {response.Row}"
+        );
+      if (response.Column != Path.First().Item2)
+        System.Console.WriteLine(
+          $"Got back a different column than we tried to get to. wanted {Path.First().Item2}, got {response.Column}"
+        );
+
+      Map.UpdateGridWithNeighbors(response.Neighbors);
+    }
   }
 }

@@ -53,6 +53,9 @@
     if (game.Map.OptimizedGrid != null && !game.Map.OptimizedGrid.ContainsKey(location))
       return "cell bg-black";
 
+    if(game.Path != null && game.Path.Contains(location))
+      return "cell bg-rose-900";
+
     if (location == game.Target)
       return "cell bg-black";
     else if (closeToRover)
@@ -96,8 +99,6 @@
           @foreach (var col in Range(0, game.Map.TopRight.Item2 + 1))
           {
             string myClass = calculateCellClass(row, col);
-
-
             <div class=@(myClass)>
             </div>
           }
