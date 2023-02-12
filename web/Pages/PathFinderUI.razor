@@ -1,0 +1,25 @@
+@inject GamePlayer game
+
+@code {
+  public async Task CalculatePath()
+  {
+    System.Console.WriteLine("Starting Path Calculation");
+    game.CalculatePath(game.Map.Grid, game.Target, game.Map.TopRight);
+    System.Console.WriteLine("Ended Path Calculation");
+  }
+}
+
+<div>
+  <button class="@(Styles.Btn) m-3" onclick="@CalculatePath">Calculate Path</button>
+
+  @if (game.Path != null)
+  {
+    <div class="text-sm">
+
+      @foreach (var location in game.Path)
+      {
+        <div>@location</div>
+      }
+    </div>
+  }
+</div>

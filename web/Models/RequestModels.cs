@@ -30,9 +30,9 @@ public record JoinResponse(
   int TargetRow,
   int TargetColumn,
   Neighbor[] Neighbors,
-  LowResolutionMap[] LowResolutionMap, 
+  LowResolutionMap[] LowResolutionMap,
   [property: RegularExpression("North|South|East|West")]
-  string Orientation 
+  string Orientation
 );
 
 public record Neighbor(

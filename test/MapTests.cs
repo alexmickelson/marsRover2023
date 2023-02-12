@@ -1,5 +1,3 @@
-
-
 public class MapTests
 {
   [Test]
@@ -112,6 +110,7 @@ public class MapTests
     var map = new MarsMap(lowResMap, neighbors);
     map.Grid[(3, 3)].Should().Be(100);
   }
+
   [Test]
   public void OtherValuesShouldBeInitializedToZero()
   {
@@ -136,5 +135,44 @@ public class MapTests
 
     var map = new MarsMap(lowResMap, neighbors);
     map.Grid[(0, 6)].Should().Be(0);
+  }
+
+  [Test]
+  public async Task CanGetNextNeighbors()
+  {
+    var lowResMap = new LowResolutionMap[]
+    {
+      new LowResolutionMap(
+        LowerLeftRow: 0,
+        LowerLeftColumn: 0,
+        UpperRightRow: 2,
+        UpperRightColumn: 2,
+        AverageDifficulty: 1
+      ),
+      new LowResolutionMap(
+        LowerLeftRow: 3,
+        LowerLeftColumn: 3,
+        UpperRightRow: 5,
+        UpperRightColumn: 6,
+        AverageDifficulty: 6
+      )
+    };
+    var grid = new int[][]
+    {
+      new int[] { 1, 1 },
+      new int[] { 1, 1 },
+      new int[] { 1, 1 },
+    };
+    Neighbor[] neighbors = Helpers.GridToNeighbors(grid);
+
+    var map = new MarsMap(lowResMap, neighbors);
+
+    var expectedLocationNeighbors = new (int, int)[] { (1, 0), (2, 1), };
+    
+    var actualLocationNeigbors = MarsMap.GetNeighbors((1, 1), (2, 0), (2, 1));
+    CollectionAssert.AreEquivalent(
+      expectedLocationNeighbors,
+      actualLocationNeigbors
+    );
   }
 }

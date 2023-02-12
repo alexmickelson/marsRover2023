@@ -21,5 +21,11 @@
 
 @if (game.Map != null)
 {
-  <Map />
+  <div>
+  Current Location: @game.CurrentLocation, Target: @game.Target
+</div>
+  <div class="flex">
+    <PathFinderUI />
+    <Map />
+  </div>
 }
