@@ -4,48 +4,36 @@ public class GameTests
   public async Task CanCaluclatePath()
   {
     GamePlayer game = await createNewGamePlayer(
-      new Neighbor[]
-      {
-        new Neighbor(1, 0, 5),
-        new Neighbor(1, 1, 5)
-      },
+      new Neighbor[] { new Neighbor(1, 0, 5), new Neighbor(1, 1, 5) },
       (0, 0),
       (1, 1)
     );
 
     game.Path.Should().NotBeNull();
     game.Path.Should().NotBeEmpty();
-    game.Path.First().Should().Be((1, 0));
+    game.Path.ElementAt(1).Should().Be((1, 0));
   }
 
   [Test]
   public async Task CanCaluclatePath_2()
   {
     GamePlayer game = await createNewGamePlayer(
-      new Neighbor[]
-      {
-        new Neighbor(0, 1, 2),
-        new Neighbor(1, 1, 5)
-      },
+      new Neighbor[] { new Neighbor(0, 1, 2), new Neighbor(1, 1, 5) },
       (0, 0),
       (1, 1)
     );
-    game.Path.First().Should().Be((0, 1));
+    game.Path.ElementAt(1).Should().Be((0, 1));
   }
 
   [Test]
   public async Task CanCaluclatePath_3()
   {
     GamePlayer game = await createNewGamePlayer(
-      new Neighbor[]
-      {
-        new Neighbor(0, 1, 2),
-        new Neighbor(1, 1, 5)
-      },
+      new Neighbor[] { new Neighbor(0, 1, 2), new Neighbor(1, 1, 5) },
       (0, 1),
       (1, 1)
     );
-    game.Path.First().Should().Be((1, 1));
+    game.Path.ElementAt(1).Should().Be((1, 1));
   }
 
   [Test]
@@ -64,29 +52,29 @@ public class GameTests
       (2, 0)
     );
 
-    var expectedPath = new (int, int)[] { (1, 0), (2, 0) };
+    var expectedPath = new (int, int)[] { (0, 0), (1, 0), (2, 0) };
     game.Path.Should().BeEquivalentTo(expectedPath);
   }
 
-  // [Test]
-  // public async Task CanCaluclatePath_5()
-  // {
-  //   var grid = new int[][]
-  //   {
-  //     new int[] { 1, 2 },
-  //     new int[] { 2, 10 },
-  //     new int[] { 1, 1 },
-  //   };
-  //   Neighbor[] neighbors = gridToNeighbors(grid);
-  //   GamePlayer game = await createNewGamePlayer(
-  //     neighbors,
-  //     (0, 0),
-  //     (0, 2)
-  //   );
+  [Test]
+  public async Task CanCaluclatePath_5()
+  {
+    var grid = new int[][]
+    {
+      new int[] { 1, 2 },
+      new int[] { 2, 10 },
+      new int[] { 1, 1 },
+    };
+    Neighbor[] neighbors = gridToNeighbors(grid);
+    GamePlayer game = await createNewGamePlayer(
+      neighbors,
+      (0, 0),
+      (2, 0)
+    );
 
-  //   var expectedPath = new (int, int)[] { (0, 1), (0, 2) };
-  //   game.Path.Should().BeEquivalentTo(expectedPath);
-  // }
+    var expectedPath = new (int, int)[] { (0, 0), (1, 0), (2, 0) };
+    CollectionAssert.AreEquivalent(expectedPath, game.Path);
+  }
 
   [Test]
   public async Task CanCaluclatePath_6()
@@ -101,17 +89,50 @@ public class GameTests
     GamePlayer game = await createNewGamePlayer(
       neighbors,
       (0, 0),
-      (0, 2)
+      (2, 0)
     );
 
     var expectedPath = new (int, int)[]
     {
+      (0, 0),
       (0, 1),
       (1, 1),
       (2, 1),
       (2, 0)
     };
-    game.Path.Should().BeEquivalentTo(expectedPath);
+    CollectionAssert.AreEquivalent(expectedPath, game.Path);
+  }
+
+  [Test]
+  public async Task CanGetNextNeighbors()
+  {
+    var grid = new int[][]
+    {
+      new int[] { 1, 1 },
+      new int[] { 1, 1 },
+      new int[] { 1, 1 },
+    };
+    Neighbor[] neighbors = gridToNeighbors(grid);
+
+    IGameService mockService = createMockGameService(
+      neighbors,
+      (0, 0),
+      (2, 0)
+    );
+    var game = new GamePlayer(mockService);
+    await game.Register("testGame");
+
+    var expectedLocationNeighbors = new (int, int)[]
+    {
+      (1, 0),
+      (2, 1),
+    };
+    var actualLocationNeigbors = game.GetNeighbors((1, 1));
+    CollectionAssert.AreEquivalent(
+      expectedLocationNeighbors,
+      actualLocationNeigbors
+    );
+    // Assert.That(actualLocationNeigbors, Is.EquivalentTo(expectedLocationNeighbors));
   }
 
   [Test]
@@ -144,11 +165,7 @@ public class GameTests
         (r, row) =>
           r.Select(
             (weight, column) =>
-              new Neighbor(
-                rowCount - row,
-                column,
-                weight
-              )
+              new Neighbor(rowCount - row, column, weight)
           )
       )
       .ToArray();
@@ -169,6 +186,7 @@ public class GameTests
     var game = new GamePlayer(mockService);
 
     await game.Register("testGame");
+    game.CalculatePath();
     return game;
   }
 
