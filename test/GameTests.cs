@@ -61,10 +61,10 @@ public class GameTests
     GamePlayer game = await createNewGamePlayer(
       neighbors,
       (0, 0),
-      (0, 2)
+      (2, 0)
     );
 
-    var expectedPath = new (int, int)[] { (0, 1), (0, 2) };
+    var expectedPath = new (int, int)[] { (1, 0), (2, 0) };
     game.Path.Should().BeEquivalentTo(expectedPath);
   }
 
@@ -106,25 +106,47 @@ public class GameTests
 
     var expectedPath = new (int, int)[]
     {
-      (1, 0),
+      (0, 1),
       (1, 1),
-      (1, 2),
-      (0, 2)
+      (2, 1),
+      (2, 0)
     };
     game.Path.Should().BeEquivalentTo(expectedPath);
   }
 
+  [Test]
+  public void TestGridToNeighbors()
+  {
+    // index (row,column) which is (y,x)
+    var grid = new int[][]
+    {
+      new int[] { 1, 2 },
+      new int[] { 3, 4 },
+    };
+    Neighbor[] neighbors = gridToNeighbors(grid);
+
+    var expectedNeighbors = new Neighbor[]
+    {
+      new Neighbor(0, 0, 3),
+      new Neighbor(1, 0, 1),
+      new Neighbor(0, 1, 4),
+      new Neighbor(1, 1, 2)
+    };
+    // neighbors.Should().BeEquivalentTo(expectedNeighbors);
+    Assert.That(neighbors, Is.EquivalentTo(expectedNeighbors));
+  }
+
   private static Neighbor[] gridToNeighbors(int[][] grid)
   {
-    var rowCount = grid.Count();
-    var colCout = grid[0].Count();
+    var rowCount = grid.Count() - 1;
+    var colCout = grid[0].Count() - 1;
     var neighbors = grid.SelectMany(
         (r, row) =>
           r.Select(
             (weight, column) =>
               new Neighbor(
                 rowCount - row,
-                colCout - column,
+                column,
                 weight
               )
           )
