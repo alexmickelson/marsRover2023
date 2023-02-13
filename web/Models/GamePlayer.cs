@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using static System.Linq.Enumerable;
 
+
 public class GamePlayer
 {
   private IGameService gameService;
@@ -139,17 +140,15 @@ public class GamePlayer
     );
     // Path = Path.Skip(1);
 
-    var xOffset = CurrentLocation.Item1 - nextLocation.Item1;
-    var yOffset = CurrentLocation.Item2 - nextLocation.Item2;
-    // System.Console.WriteLine(rowOffset);
-    // System.Console.WriteLine(colOffset);
+    var xOffset = nextLocation.Item1 - CurrentLocation.Item1 ;
+    var yOffset = nextLocation.Item2 - CurrentLocation.Item2;
 
     var desiredOrientation = (xOffset, yOffset) switch
     {
-      (0, 1) => "West",
-      (0, -1) => "East",
-      (1, 0) => "South",
-      (-1, 0) => "North",
+      (0, 1) => "North",
+      (0, -1) => "South",
+      (1, 0) => "East",
+      (-1, 0) => "West",
       (0, 0) => throw new Exception("Cannot move to same position"),
       _
         => throw new Exception(
@@ -161,16 +160,10 @@ public class GamePlayer
 
     var response = await MoveAndUpdateStatus(Direction.Forward);
 
-    System.Console.WriteLine(nextLocation);
-    System.Console.WriteLine((response.X, response.Y));
-
-    if (response.X != nextLocation.Item1)
+    if (response.X != nextLocation.Item1 || response.Y != nextLocation.Item2)
       System.Console.WriteLine(
-        $"Got back a different X coordinate than we tried to get to. wanted {nextLocation.Item1}, got {response.X}"
-      );
-    if (response.Y != nextLocation.Item2)
-      System.Console.WriteLine(
-        $"Got back a different Y coordinate than we tried to get to. wanted {nextLocation.Item2}, got {response.Y}"
+        $"Got back a differentcoordinate than we tried to get to." 
+        + $" wanted {(nextLocation.Item1,nextLocation.Item2)}, got {(response.X, response.Y)}"
       );
 
     Map.UpdateGridWithNeighbors(response.Neighbors);
