@@ -43,19 +43,19 @@ public class MarsMap
     LowResScaleFactor =
       lowResMap.First().UpperRightX - lowResMap.First().LowerLeftX + 1;
 
-    var maxRow = 0;
-    var maxCol = 0;
+    var maxX = 0;
+    var maxY = 0;
     foreach (var lowRes in lowResMap)
     {
-      var scaledRow = lowRes.LowerLeftX / LowResScaleFactor;
-      var scaledColumn = lowRes.LowerLeftY / LowResScaleFactor;
-      LowResGrid[(scaledRow, scaledColumn)] = lowRes.AverageDifficulty;
-      if (scaledColumn > maxCol)
-        maxCol = scaledColumn;
-      if (scaledRow > maxRow)
-        maxRow = scaledRow;
+      var scaledX = lowRes.LowerLeftX / LowResScaleFactor;
+      var scaledY = lowRes.LowerLeftY / LowResScaleFactor;
+      LowResGrid[(scaledX, scaledY)] = lowRes.AverageDifficulty;
+      if (scaledY > maxY)
+        maxY = scaledY;
+      if (scaledX > maxX)
+        maxX = scaledX;
     }
-    LowResTopRight = (maxRow, maxCol);
+    LowResTopRight = (maxX, maxY);
   }
 
   public void UpdateGridWithNeighbors(IEnumerable<Neighbor> neighbors)
@@ -72,27 +72,27 @@ public class MarsMap
     IEnumerable<LowResolutionMap> lowResMap
   )
   {
-    var rows = lowResMap.Max(l => l.UpperRightX);
-    var columns = lowResMap.Max(l => l.UpperRightY);
+    var xCount = lowResMap.Max(l => l.UpperRightX);
+    var yCount = lowResMap.Max(l => l.UpperRightY);
 
     var newGrid = new ConcurrentDictionary<(int, int), int>();
-    foreach (var r in Range(0, rows + 1))
-      foreach (var c in Range(0, columns + 1))
-        newGrid[(r, c)] = 0;
+    foreach (var x in Range(0, xCount + 1))
+      foreach (var y in Range(0, yCount + 1))
+        newGrid[(x, y)] = 0;
 
-    return (newGrid, (rows, columns));
+    return (newGrid, (xCount, yCount));
   }
 
   private void setLowResMapValues(IEnumerable<LowResolutionMap> lowResMap)
   {
     foreach (var cell in lowResMap)
     {
-      var rowRangeCount = cell.UpperRightX - cell.LowerLeftX + 1;
-      var colRangeCount = cell.UpperRightY - cell.LowerLeftY + 1;
+      var xRangeCount = cell.UpperRightX - cell.LowerLeftX + 1;
+      var yRangeCount = cell.UpperRightY - cell.LowerLeftY + 1;
 
-      foreach (var i in Range(cell.LowerLeftX, rowRangeCount))
-        foreach (var j in Range(cell.LowerLeftY, colRangeCount))
-          Grid[(i, j)] = cell.AverageDifficulty;
+      foreach (var x in Range(cell.LowerLeftX, xRangeCount))
+        foreach (var y in Range(cell.LowerLeftY, yRangeCount))
+          Grid[(x, y)] = cell.AverageDifficulty;
     }
   }
 

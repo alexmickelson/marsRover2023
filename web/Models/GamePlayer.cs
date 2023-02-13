@@ -96,13 +96,13 @@ public class GamePlayer
 
     foreach (var lowResLocation in LowResPath)
     {
-      var startingRow = lowResLocation.Item1 * Map.LowResScaleFactor;
-      var startingColumn = lowResLocation.Item2 * Map.LowResScaleFactor;
-      foreach (var row in Range(startingRow, Map.LowResScaleFactor))
+      var startingX = lowResLocation.Item1 * Map.LowResScaleFactor;
+      var startingY = lowResLocation.Item2 * Map.LowResScaleFactor;
+      foreach (var x in Range(startingX, Map.LowResScaleFactor))
       {
-        foreach (var col in Range(startingColumn, Map.LowResScaleFactor))
+        foreach (var y in Range(startingY, Map.LowResScaleFactor))
         {
-          newGrid[(row, col)] = Map.Grid[(row, col)];
+          newGrid[(x, y)] = Map.Grid[(x, y)];
         }
       }
     }
@@ -139,12 +139,12 @@ public class GamePlayer
     );
     // Path = Path.Skip(1);
 
-    var rowOffset = CurrentLocation.Item1 - nextLocation.Item1;
-    var colOffset = CurrentLocation.Item2 - nextLocation.Item2;
+    var xOffset = CurrentLocation.Item1 - nextLocation.Item1;
+    var yOffset = CurrentLocation.Item2 - nextLocation.Item2;
     // System.Console.WriteLine(rowOffset);
     // System.Console.WriteLine(colOffset);
 
-    var desiredOrientation = (rowOffset, colOffset) switch
+    var desiredOrientation = (xOffset, yOffset) switch
     {
       (0, 1) => "West",
       (0, -1) => "East",
@@ -153,7 +153,7 @@ public class GamePlayer
       (0, 0) => throw new Exception("Cannot move to same position"),
       _
         => throw new Exception(
-          $"Error detecting direction, {(rowOffset, colOffset)}"
+          $"Error detecting direction, {(xOffset, yOffset)}"
         ),
     };
 
@@ -166,11 +166,11 @@ public class GamePlayer
 
     if (response.Row != nextLocation.Item1)
       System.Console.WriteLine(
-        $"Got back a different row than we tried to get to. wanted {nextLocation.Item1}, got {response.Row}"
+        $"Got back a different X coordinate than we tried to get to. wanted {nextLocation.Item1}, got {response.Row}"
       );
     if (response.Column != nextLocation.Item2)
       System.Console.WriteLine(
-        $"Got back a different column than we tried to get to. wanted {nextLocation.Item2}, got {response.Column}"
+        $"Got back a different Y coordinate than we tried to get to. wanted {nextLocation.Item2}, got {response.Column}"
       );
 
     Map.UpdateGridWithNeighbors(response.Neighbors);

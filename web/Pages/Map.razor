@@ -43,11 +43,11 @@
 {37, "900"},
 {38, "900"},
 };
-  public string calculateCellClass(int row, int col)
+  public string calculateCellClass(int x, int y)
   {
     @* var closeToRover = Math.Abs(row - game.CurrentLocation.Item1) < 2 && Math.Abs(col - game.CurrentLocation.Item2) < 2;
 *@
-    var location = (row, col);
+    var location = (x, y);
 
     if (location == game.CurrentLocation)
       return "cell bg-lime-600";
@@ -84,9 +84,9 @@
       if (game.Path == null)
         return (0, 0);
 
-      var lowRow = game.Path.Select(l => l.Item1).Min();
-      var lowCol = game.Path.Select(l => l.Item2).Min();
-      return (lowRow, lowCol);
+      var lowX = game.Path.Select(l => l.Item1).Min();
+      var lowY = game.Path.Select(l => l.Item2).Min();
+      return (lowX, lowY);
     }
   }
   public (int, int) TopRight
@@ -96,9 +96,9 @@
       if (game.Path == null)
         return game.Map.TopRight;
 
-      var highRow = game.Path.Select(l => l.Item1).Max();
-      var highCol = game.Path.Select(l => l.Item2).Max();
-      return (highRow, highCol);
+      var highX = game.Path.Select(l => l.Item1).Max();
+      var highY = game.Path.Select(l => l.Item2).Max();
+      return (highX, highY);
     }
   }
 }
@@ -124,10 +124,10 @@
   @if (game.Map != null && game.Path != null)
   {
     <div class="px-auto">
-          @foreach (var row in Range(BottomLeft.Item1 - 5, TopRight.Item1 - BottomLeft.Item1 + 10).Reverse())
+      @foreach (var row in Range(BottomLeft.Item1 - 5, TopRight.Item1 - BottomLeft.Item1 + 10).Reverse())
       {
         <div class="my-row">
-      @foreach (var col in Range(BottomLeft.Item2 - 5, TopRight.Item2 - BottomLeft.Item2 + 10))
+          @foreach (var col in Range(BottomLeft.Item2 - 5, TopRight.Item2 - BottomLeft.Item2 + 10))
           {
             string myClass = calculateCellClass(row, col);
             <div class=@(myClass)>
