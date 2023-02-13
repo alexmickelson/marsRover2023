@@ -60,10 +60,10 @@ public class Helpers
     var averageDifficulty = Convert.ToInt32(cells.Average(c => c.Difficulty));
     var gameResponse = new JoinResponse(
       Token: "sometoken",
-      StartingRow: start.Item1,
-      StartingColumn: start.Item2,
-      TargetRow: target.Item1,
-      TargetColumn: target.Item2,
+      StartingX: start.Item1,
+      StartingY: start.Item2,
+      TargetX: target.Item1,
+      TargetY: target.Item2,
       Neighbors: cells,
       LowResolutionMap: lowResolutionMap != null
         ? lowResolutionMap

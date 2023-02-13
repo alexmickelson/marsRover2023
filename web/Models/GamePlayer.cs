@@ -31,16 +31,16 @@ public class GamePlayer
 
     Map = new MarsMap(response.LowResolutionMap, response.Neighbors);
 
-    CurrentLocation = (response.StartingRow, response.StartingColumn);
-    Target = (response.TargetRow, response.TargetColumn);
+    CurrentLocation = (response.StartingX, response.StartingY);
+    Target = (response.TargetX, response.TargetY);
 
     LowResCurrentLocation = (
-      response.StartingRow / Map.LowResScaleFactor,
-      response.StartingColumn / Map.LowResScaleFactor
+      response.StartingX / Map.LowResScaleFactor,
+      response.StartingY / Map.LowResScaleFactor
     );
     LowResTarget = (
-      response.TargetRow / Map.LowResScaleFactor,
-      response.TargetColumn / Map.LowResScaleFactor
+      response.TargetX / Map.LowResScaleFactor,
+      response.TargetY / Map.LowResScaleFactor
     );
 
     System.Console.WriteLine("Registered for game");
@@ -162,15 +162,15 @@ public class GamePlayer
     var response = await MoveAndUpdateStatus(Direction.Forward);
 
     System.Console.WriteLine(nextLocation);
-    System.Console.WriteLine((response.Row, response.Column));
+    System.Console.WriteLine((response.X, response.Y));
 
-    if (response.Row != nextLocation.Item1)
+    if (response.X != nextLocation.Item1)
       System.Console.WriteLine(
-        $"Got back a different X coordinate than we tried to get to. wanted {nextLocation.Item1}, got {response.Row}"
+        $"Got back a different X coordinate than we tried to get to. wanted {nextLocation.Item1}, got {response.X}"
       );
-    if (response.Column != nextLocation.Item2)
+    if (response.Y != nextLocation.Item2)
       System.Console.WriteLine(
-        $"Got back a different Y coordinate than we tried to get to. wanted {nextLocation.Item2}, got {response.Column}"
+        $"Got back a different Y coordinate than we tried to get to. wanted {nextLocation.Item2}, got {response.Y}"
       );
 
     Map.UpdateGridWithNeighbors(response.Neighbors);
@@ -212,7 +212,7 @@ public class GamePlayer
     System.Console.WriteLine(response.Message);
     if (direction == Direction.Forward)
       System.Console.WriteLine(
-        $"Moved to {(response.Row, response.Column)} from {CurrentLocation}"
+        $"Moved to {(response.X, response.Y)} from {CurrentLocation}"
       );
     else
       System.Console.WriteLine(
@@ -220,7 +220,7 @@ public class GamePlayer
       );
     Battery = response.BatteryLevel;
     Orientation = response.Orientation;
-    CurrentLocation = (response.Row, response.Column);
+    CurrentLocation = (response.X, response.Y);
     return response;
   }
 }
