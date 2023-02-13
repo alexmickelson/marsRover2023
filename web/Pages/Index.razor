@@ -8,34 +8,43 @@
   {
     await game.Register(gameId, name);
   }
+  private void refresh()
+  {
+    this.StateHasChanged();
+  }
 }
 
 <PageTitle>Index</PageTitle>
 <div class="container mx-auto">
+  <div class="flex">
 
-  <form @onsubmit:preventDefault="true" @onsubmit="Register">
-    <div>
-      <label>Game ID:</label>
-      <input type="text" class="rounded bg-slate-600 p-1 m-1" @bind='gameId' />
-    </div>
-    <div>
-      <label>Name:</label>
-      <input type="text" class="rounded bg-slate-600 p-1 m-1" @bind='name' />
-    </div>
+    <form @onsubmit:preventDefault="true" @onsubmit="Register">
+      <div>
+        <label>Game ID:</label>
+        <input type="text" class="rounded bg-slate-600 p-1 m-1" @bind='gameId' />
+      </div>
+      <div>
+        <label>Name:</label>
+        <input type="text" class="rounded bg-slate-600 p-1 m-1" @bind='name' />
+      </div>
 
-    <button class="@(Styles.Btn)">
-      Register for Game
-    </button>
-  </form>
+      <button class="@(Styles.Btn)">
+        Register for Game
+      </button>
+    </form>
+    <div>
+      <button class="@(Styles.Btn) m-5" onclick="refresh">
+        refresh stats
+      </button>
+    </div>
+  </div>
 </div>
 
 @if (game.Map != null)
 {
   <div>
-  Current Location: @game.CurrentLocation, Target: @game.Target
+  Current Location: @game.CurrentLocation, Orientation: @game.Orientation, Target: @game.Target
 </div>
-  <div class="flex">
-    <ControlUI />
-    <Map />
-  </div>
+  <ControlUI />
+  <Map />
 }

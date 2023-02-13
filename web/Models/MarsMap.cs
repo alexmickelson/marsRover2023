@@ -151,7 +151,7 @@ public class MarsMap
         locationsToProcess
       );
 
-      System.Console.WriteLine(historyEntry);
+      // System.Console.WriteLine(historyEntry);
 
       locationPaths[historyEntry.Location] = historyEntry;
       currentCheckLocation = historyEntry.Location;

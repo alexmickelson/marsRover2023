@@ -40,28 +40,32 @@ public class GameService : IGameService
     Name = name;
     var joinUrl = $"/game/join?gameId={GameId}&name={Name}";
     var request = new RestRequest(joinUrl);
-    var response = await client.GetAsync<JoinResponse>(request);
-    if (response == null)
+    var response = await client.ExecuteGetAsync<JoinResponse>(request);
+
+    if (!response.IsSuccessful)
     {
       System.Console.WriteLine(JsonSerializer.Serialize(response));
       throw new Exception("Could not join game, got null response");
     }
-    Token = response.Token;
-    return response;
+
+    Token = response.Data.Token;
+    return response.Data;
   }
 
   public async Task<MoveResponse> Move(Direction direction)
   {
     var joinUrl = $"/game/moveperseverance?token={Token}&direction={direction}";
     var request = new RestRequest(joinUrl);
-    var response = await client.GetAsync<MoveResponse>(request);
+    var response = await client.ExecuteGetAsync<MoveResponse>(request);
 
-    if (response == null)
+    if (!response.IsSuccessful || response.Data == null)
     {
       System.Console.WriteLine(JsonSerializer.Serialize(response));
+      System.Console.WriteLine(response.Content);
+      System.Console.WriteLine(response.StatusCode);
       throw new Exception("Could not move perserverance, got null response");
     }
-    return response;
+    return response.Data;
   }
 
   public async Task<MoveResponse> MoveInenuity(int row, int col)

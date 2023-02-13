@@ -45,58 +45,89 @@
 };
   public string calculateCellClass(int row, int col)
   {
-    var closeToRover = Math.Abs(row - game.CurrentLocation.Item1) < 2 && Math.Abs(col - game.CurrentLocation.Item2) < 2;
-
-
+    @* var closeToRover = Math.Abs(row - game.CurrentLocation.Item1) < 2 && Math.Abs(col - game.CurrentLocation.Item2) < 2;
+*@
     var location = (row, col);
+
+    if (location == game.CurrentLocation)
+      return "cell bg-lime-600";
+
+    if (location == game.Target)
+      return "cell bg-black";
 
     if (game.Map.OptimizedGrid != null && !game.Map.OptimizedGrid.ContainsKey(location))
       return "cell bg-black";
 
-    if(game.Path != null && game.Path.Contains(location))
+    if (game.Path != null && game.Path.Contains(location))
       return "cell bg-rose-900";
 
-    if (location == game.Target)
-      return "cell bg-black";
-    else if (closeToRover)
-      return "cell bg-lime-600";
-    else if (!Colors.ContainsKey(game.Map.Grid[location] / 10))
-      return "cell bg-rose-900";
-    else
-      return "cell bg-rose-" + Colors[game.Map.Grid[location] / 10];
 
+
+    if (!game.Map.Grid.ContainsKey(location))
+      return "";
+    var colorKey = game.Map.Grid[location] / 10;
+
+    if (Colors.ContainsKey(colorKey))
+      return "cell bg-rose-" + Colors[colorKey];
+
+    return "cell bg-rose-900";
   }
   public void Refresh()
   {
     this.StateHasChanged();
   }
+
+  public (int, int) BottomLeft
+  {
+    get
+    {
+      if (game.Path == null)
+        return (0, 0);
+
+      var lowRow = game.Path.Select(l => l.Item1).Min();
+      var lowCol = game.Path.Select(l => l.Item2).Min();
+      return (lowRow, lowCol);
+    }
+  }
+  public (int, int) TopRight
+  {
+    get
+    {
+      if (game.Path == null)
+        return game.Map.TopRight;
+
+      var highRow = game.Path.Select(l => l.Item1).Max();
+      var highCol = game.Path.Select(l => l.Item2).Max();
+      return (highRow, highCol);
+    }
+  }
 }
 <style>
   .cell {
-    height: 1px;
-    width: 1px;
+    height: 3px;
+    width: 3px;
     display: inline-block;
     margin: 0;
     padding: 0;
   }
 
   .my-row {
-    height: 1px;
+    height: 3px;
     margin: 0;
     padding: 0;
   }
 </style>
 
-<div>
+<div class="p-1">
   <button class="@(Styles.Btn)" onclick="@Refresh">Refresh Grid</button>
 
-  @if (game.Map != null)
+  @if (game.Map != null && game.Path != null)
   {
     <div class="px-auto">
-      @foreach (var row in Range(0, game.Map.TopRight.Item1 + 1))
+          @foreach (var row in Range(BottomLeft.Item1 - 5, TopRight.Item1 - BottomLeft.Item1 + 10).Reverse())
       {
         <div class="my-row">
-          @foreach (var col in Range(0, game.Map.TopRight.Item2 + 1))
+      @foreach (var col in Range(BottomLeft.Item2 - 5, TopRight.Item2 - BottomLeft.Item2 + 10))
           {
             string myClass = calculateCellClass(row, col);
             <div class=@(myClass)>

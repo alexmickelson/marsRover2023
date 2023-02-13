@@ -123,58 +123,104 @@ public class GamePlayer
     Map.OptimizedGrid = newGrid;
   }
 
-  public async Task FollowPath()
+  public async Task Take1Step()
   {
-    while (Path.Count() > 0)
-    {
-      var nextLocation = Path.First();
+    // System.Console.WriteLine("starting at location:");
+    // System.Console.WriteLine(CurrentLocation);
+    // System.Console.WriteLine("path starts at");
+    // System.Console.WriteLine(Path.First());
+
+    while (Path.First() == CurrentLocation)
       Path = Path.Skip(1);
-      var rowOffset = CurrentLocation.Item1 - nextLocation.Item1;
-      var colOffset = CurrentLocation.Item2 - CurrentLocation.Item2;
-      System.Console.WriteLine(rowOffset);
-      System.Console.WriteLine(colOffset);
 
-      var desiredOrientation = (rowOffset, colOffset) switch
-      {
-        (0, 1) => "East",
-        (0, -1) => "West",
-        (1, 0) => "North",
-        (-1, 0) => "South",
-      };
+    var nextLocation = Path.First();
+    System.Console.WriteLine(
+      $"Want to move to {nextLocation}, currently at {CurrentLocation}"
+    );
+    // Path = Path.Skip(1);
 
-      MoveResponse response;
-      if (Orientation != desiredOrientation)
+    var rowOffset = CurrentLocation.Item1 - nextLocation.Item1;
+    var colOffset = CurrentLocation.Item2 - nextLocation.Item2;
+    // System.Console.WriteLine(rowOffset);
+    // System.Console.WriteLine(colOffset);
+
+    var desiredOrientation = (rowOffset, colOffset) switch
+    {
+      (0, 1) => "West",
+      (0, -1) => "East",
+      (1, 0) => "South",
+      (-1, 0) => "North",
+      (0, 0) => throw new Exception("Cannot move to same position"),
+      _
+        => throw new Exception(
+          $"Error detecting direction, {(rowOffset, colOffset)}"
+        ),
+    };
+
+    await turnToFaceCorrectDirection(desiredOrientation);
+
+    var response = await MoveAndUpdateStatus(Direction.Forward);
+
+    System.Console.WriteLine(nextLocation);
+    System.Console.WriteLine((response.Row, response.Column));
+
+    if (response.Row != nextLocation.Item1)
+      System.Console.WriteLine(
+        $"Got back a different row than we tried to get to. wanted {nextLocation.Item1}, got {response.Row}"
+      );
+    if (response.Column != nextLocation.Item2)
+      System.Console.WriteLine(
+        $"Got back a different column than we tried to get to. wanted {nextLocation.Item2}, got {response.Column}"
+      );
+
+    Map.UpdateGridWithNeighbors(response.Neighbors);
+  }
+
+  private async Task turnToFaceCorrectDirection(string desiredOrientation)
+  {
+    while (Orientation != desiredOrientation)
+    {
+      System.Console.WriteLine(
+        $"Facing {Orientation}, need to turn to face {desiredOrientation}"
+      );
+      var turnLeft =
+        (Orientation == "East" && desiredOrientation == "North")
+        || (Orientation == "North" && desiredOrientation == "West")
+        || (Orientation == "West" && desiredOrientation == "South")
+        || (Orientation == "South" && desiredOrientation == "East");
+      if (turnLeft)
       {
-        var turnLeft =
-          (Orientation == "East" && desiredOrientation == "North")
-          || (Orientation == "North" && desiredOrientation == "West")
-          || (Orientation == "West" && desiredOrientation == "South")
-          || (Orientation == "South" && desiredOrientation == "East");
-        if (turnLeft)
-          response = await gameService.Move(Direction.Left);
-        else
-          response = await gameService.Move(Direction.Right);
+        System.Console.WriteLine(
+          $"Need to turn left to face {desiredOrientation}"
+        );
+        await MoveAndUpdateStatus(Direction.Left);
       }
       else
       {
-        response = await gameService.Move(Direction.Forward);
+        System.Console.WriteLine(
+          $"Need to turn right to face {desiredOrientation}"
+        );
+        await MoveAndUpdateStatus(Direction.Right);
       }
-
-      Battery = response.BatteryLevel;
-      Orientation = response.Orientation;
-      System.Console.WriteLine("resposne message: ");
-      System.Console.WriteLine(response.Message);
-
-      if (response.Row != Path.First().Item1)
-        System.Console.WriteLine(
-          $"Got back a different row than we tried to get to. wanted {Path.First().Item1}, got {response.Row}"
-        );
-      if (response.Column != Path.First().Item2)
-        System.Console.WriteLine(
-          $"Got back a different column than we tried to get to. wanted {Path.First().Item2}, got {response.Column}"
-        );
-
-      Map.UpdateGridWithNeighbors(response.Neighbors);
     }
+  }
+
+  private async Task<MoveResponse> MoveAndUpdateStatus(Direction direction)
+  {
+    var response = await gameService.Move(direction);
+
+    System.Console.WriteLine(response.Message);
+    if (direction == Direction.Forward)
+      System.Console.WriteLine(
+        $"Moved to {(response.Row, response.Column)} from {CurrentLocation}"
+      );
+    else
+      System.Console.WriteLine(
+        $"Turned to {response.Orientation} from {Orientation}"
+      );
+    Battery = response.BatteryLevel;
+    Orientation = response.Orientation;
+    CurrentLocation = (response.Row, response.Column);
+    return response;
   }
 }

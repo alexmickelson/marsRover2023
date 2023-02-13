@@ -1,3 +1,4 @@
+@using static System.Linq.Enumerable;
 @inject GamePlayer game
 
 @code {
@@ -14,12 +15,26 @@
     game.OptimizeGrid();
     System.Console.WriteLine("Ended Grid Optimization");
   }
-
-  public async Task FollowPath()
+  private bool stepInProgress { get; set; } = false;
+  public async Task TakeStep()
   {
-    System.Console.WriteLine("Started Following Path");
-    await game.FollowPath();
-    System.Console.WriteLine("Ended Following Path");
+    stepInProgress = true;
+    try
+    {
+      System.Console.WriteLine("Started Following Path");
+      await game.Take1Step();
+      System.Console.WriteLine("Ended Following Path");
+    }
+    catch (Exception e)
+    {
+
+      System.Console.WriteLine(e);
+      System.Console.WriteLine("Error Following Path");
+    }
+    finally
+    {
+      stepInProgress = false;
+    }
   }
 }
 
@@ -27,7 +42,7 @@
 
   <button class="@(Styles.Btn) m-3" @onclick="OptimiseGrid">Optimise Grid</button>
   <button class="@(Styles.Btn) m-3" @onclick="CalculatePath">Calculate Path</button>
-  <button class="@(Styles.Btn) m-3" @onclick="FollowPath">Follow Path</button>
+  <button class="@(Styles.Btn) m-3" @onclick="TakeStep" disabled="@stepInProgress">Take Step</button>
 
   @if (game.Path != null)
   {
@@ -41,5 +56,11 @@
     <div>
     Battery: @game.Battery
   </div>
+    <div>
+    @foreach (var i in Range(0, 5))
+      {
+        <div>@i: @game.Path.ElementAt(i)</div>
+      }
+    </div>
   }
 </div>
