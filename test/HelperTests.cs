@@ -3,15 +3,17 @@ public class Helpers
   [Test]
   public void TestGridToNeighbors()
   {
-    // index (row,column) which is (y,x)
+    // index (row,column) which is (x,y)
+    // row = x
+    // col = y
     var grid = new int[][] { new int[] { 1, 2 }, new int[] { 3, 4 }, };
     Neighbor[] neighbors = GridToNeighbors(grid);
 
     var expectedNeighbors = new Neighbor[]
     {
       new Neighbor(0, 0, 3),
-      new Neighbor(1, 0, 1),
-      new Neighbor(0, 1, 4),
+      new Neighbor(0, 1, 1),
+      new Neighbor(1, 0, 4),
       new Neighbor(1, 1, 2)
     };
     Assert.That(neighbors, Is.EquivalentTo(expectedNeighbors));
@@ -19,13 +21,10 @@ public class Helpers
 
   public static Neighbor[] GridToNeighbors(int[][] grid)
   {
-    var rowCount = grid.Count() - 1;
-    var colCout = grid[0].Count() - 1;
+    var yCount = grid.Count() - 1;
     var neighbors = grid.SelectMany(
-        (r, row) =>
-          r.Select(
-            (weight, column) => new Neighbor(rowCount - row, column, weight)
-          )
+        (r, y) =>
+          r.Select((weight, x) => new Neighbor(X: x, Y: yCount - y, weight))
       )
       .ToArray();
     return neighbors;
@@ -71,10 +70,10 @@ public class Helpers
         : new LowResolutionMap[]
         {
           new LowResolutionMap(
-            LowerLeftRow: 0,
-            LowerLeftColumn: 0,
-            UpperRightRow: cells.Max(c => c.Row),
-            UpperRightColumn: cells.Max(c => c.Column),
+            LowerLeftX: 0,
+            LowerLeftY: 0,
+            UpperRightX: cells.Max(c => c.X),
+            UpperRightY: cells.Max(c => c.Y),
             AverageDifficulty: averageDifficulty + 10
           )
         },

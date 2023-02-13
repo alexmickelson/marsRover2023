@@ -36,15 +36,15 @@ public record JoinResponse(
 );
 
 public record Neighbor(
-  int Row,
-  int Column,
+  int X,
+  int Y,
   int Difficulty
 );
 
 public record LowResolutionMap(
-  int LowerLeftRow,
-  int LowerLeftColumn,
-  int UpperRightRow,
-  int UpperRightColumn,
+  int LowerLeftX,
+  int LowerLeftY,
+  int UpperRightX,
+  int UpperRightY,
   int AverageDifficulty
 );

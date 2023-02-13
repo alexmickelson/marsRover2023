@@ -49,10 +49,10 @@ public class GameTests
     GamePlayer game = await Helpers.CreateNewGamePlayer(
       neighbors,
       (0, 0),
-      (2, 0)
+      (0, 2)
     );
 
-    var expectedPath = new (int, int)[] { (0, 0), (1, 0), (2, 0) };
+    var expectedPath = new (int, int)[] { (0, 0), (0, 1), (0, 2) };
     game.Path.Should().BeEquivalentTo(expectedPath);
   }
 
@@ -69,10 +69,10 @@ public class GameTests
     GamePlayer game = await Helpers.CreateNewGamePlayer(
       neighbors,
       (0, 0),
-      (2, 0)
+      (0, 2)
     );
 
-    var expectedPath = new (int, int)[] { (0, 0), (1, 0), (2, 0) };
+    var expectedPath = new (int, int)[] { (0, 0), (0, 1), (0, 2) };
     CollectionAssert.AreEquivalent(expectedPath, game.Path);
   }
 
@@ -89,16 +89,16 @@ public class GameTests
     GamePlayer game = await Helpers.CreateNewGamePlayer(
       neighbors,
       (0, 0),
-      (2, 0)
+      (0, 2)
     );
 
     var expectedPath = new (int, int)[]
     {
       (0, 0),
-      (0, 1),
+      (1, 0),
       (1, 1),
-      (2, 1),
-      (2, 0)
+      (1, 2),
+      (0, 2)
     };
     CollectionAssert.AreEquivalent(expectedPath, game.Path);
   }

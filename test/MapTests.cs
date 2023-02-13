@@ -13,10 +13,10 @@ public class MapTests
     var lowResMap = new LowResolutionMap[]
     {
       new LowResolutionMap(
-        LowerLeftRow: 0,
-        LowerLeftColumn: 0,
-        UpperRightRow: 1,
-        UpperRightColumn: 1,
+        LowerLeftX: 0,
+        LowerLeftY: 0,
+        UpperRightX: 1,
+        UpperRightY: 1,
         AverageDifficulty: 0
       )
     };
@@ -27,10 +27,10 @@ public class MapTests
       new LowResolutionMap[]
       {
         new LowResolutionMap(
-          LowerLeftRow: 0,
-          LowerLeftColumn: 0,
-          UpperRightRow: 1,
-          UpperRightColumn: 1,
+          LowerLeftX: 0,
+          LowerLeftY: 0,
+          UpperRightX: 1,
+          UpperRightY: 1,
           AverageDifficulty: 1
         )
       }
@@ -41,10 +41,10 @@ public class MapTests
       new LowResolutionMap[]
       {
         new LowResolutionMap(
-          LowerLeftRow: 0,
-          LowerLeftColumn: 0,
-          UpperRightRow: 2,
-          UpperRightColumn: 2,
+          LowerLeftX: 0,
+          LowerLeftY: 0,
+          UpperRightX: 2,
+          UpperRightY: 2,
           AverageDifficulty: 1
         )
       }
@@ -63,17 +63,17 @@ public class MapTests
       new LowResolutionMap[]
       {
         new LowResolutionMap(
-          LowerLeftRow: 0,
-          LowerLeftColumn: 0,
-          UpperRightRow: 2,
-          UpperRightColumn: 2,
+          LowerLeftX: 0,
+          LowerLeftY: 0,
+          UpperRightX: 2,
+          UpperRightY: 2,
           AverageDifficulty: 1
         ),
         new LowResolutionMap(
-          LowerLeftRow: 3,
-          LowerLeftColumn: 3,
-          UpperRightRow: 5,
-          UpperRightColumn: 6,
+          LowerLeftX: 3,
+          LowerLeftY: 3,
+          UpperRightX: 5,
+          UpperRightY: 6,
           AverageDifficulty: 6
         )
       }
@@ -91,17 +91,17 @@ public class MapTests
     var lowResMap = new LowResolutionMap[]
     {
       new LowResolutionMap(
-        LowerLeftRow: 0,
-        LowerLeftColumn: 0,
-        UpperRightRow: 2,
-        UpperRightColumn: 2,
+        LowerLeftX: 0,
+        LowerLeftY: 0,
+        UpperRightX: 2,
+        UpperRightY: 2,
         AverageDifficulty: 1
       ),
       new LowResolutionMap(
-        LowerLeftRow: 3,
-        LowerLeftColumn: 3,
-        UpperRightRow: 5,
-        UpperRightColumn: 6,
+        LowerLeftX: 3,
+        LowerLeftY: 3,
+        UpperRightX: 5,
+        UpperRightY: 6,
         AverageDifficulty: 6
       )
     };
@@ -117,17 +117,17 @@ public class MapTests
     var lowResMap = new LowResolutionMap[]
     {
       new LowResolutionMap(
-        LowerLeftRow: 0,
-        LowerLeftColumn: 0,
-        UpperRightRow: 2,
-        UpperRightColumn: 2,
+        LowerLeftX: 0,
+        LowerLeftY: 0,
+        UpperRightX: 2,
+        UpperRightY: 2,
         AverageDifficulty: 1
       ),
       new LowResolutionMap(
-        LowerLeftRow: 3,
-        LowerLeftColumn: 3,
-        UpperRightRow: 5,
-        UpperRightColumn: 6,
+        LowerLeftX: 3,
+        LowerLeftY: 3,
+        UpperRightX: 5,
+        UpperRightY: 6,
         AverageDifficulty: 6
       )
     };
@@ -138,22 +138,22 @@ public class MapTests
   }
 
   [Test]
-  public async Task CanGetNextNeighbors()
+  public void CanGetNextNeighbors()
   {
     var lowResMap = new LowResolutionMap[]
     {
       new LowResolutionMap(
-        LowerLeftRow: 0,
-        LowerLeftColumn: 0,
-        UpperRightRow: 2,
-        UpperRightColumn: 2,
+        LowerLeftX: 0,
+        LowerLeftY: 0,
+        UpperRightX: 2,
+        UpperRightY: 2,
         AverageDifficulty: 1
       ),
       new LowResolutionMap(
-        LowerLeftRow: 3,
-        LowerLeftColumn: 3,
-        UpperRightRow: 5,
-        UpperRightColumn: 6,
+        LowerLeftX: 3,
+        LowerLeftY: 3,
+        UpperRightX: 5,
+        UpperRightY: 6,
         AverageDifficulty: 6
       )
     };

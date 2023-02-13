@@ -41,14 +41,14 @@ public class MarsMap
     LowResGrid = new();
     LowResolutionMaps = lowResMap;
     LowResScaleFactor =
-      lowResMap.First().UpperRightRow - lowResMap.First().LowerLeftRow + 1;
+      lowResMap.First().UpperRightX - lowResMap.First().LowerLeftX + 1;
 
     var maxRow = 0;
     var maxCol = 0;
     foreach (var lowRes in lowResMap)
     {
-      var scaledRow = lowRes.LowerLeftRow / LowResScaleFactor;
-      var scaledColumn = lowRes.LowerLeftColumn / LowResScaleFactor;
+      var scaledRow = lowRes.LowerLeftX / LowResScaleFactor;
+      var scaledColumn = lowRes.LowerLeftY / LowResScaleFactor;
       LowResGrid[(scaledRow, scaledColumn)] = lowRes.AverageDifficulty;
       if (scaledColumn > maxCol)
         maxCol = scaledColumn;
@@ -62,9 +62,9 @@ public class MarsMap
   {
     foreach (var neighbor in neighbors)
     {
-      Grid[(neighbor.Row, neighbor.Column)] = neighbor.Difficulty;
+      Grid[(neighbor.X, neighbor.Y)] = neighbor.Difficulty;
       if (OptimizedGrid != null)
-        OptimizedGrid[(neighbor.Row, neighbor.Column)] = neighbor.Difficulty;
+        OptimizedGrid[(neighbor.X, neighbor.Y)] = neighbor.Difficulty;
     }
   }
 
@@ -72,8 +72,8 @@ public class MarsMap
     IEnumerable<LowResolutionMap> lowResMap
   )
   {
-    var rows = lowResMap.Max(l => l.UpperRightRow);
-    var columns = lowResMap.Max(l => l.UpperRightColumn);
+    var rows = lowResMap.Max(l => l.UpperRightX);
+    var columns = lowResMap.Max(l => l.UpperRightY);
 
     var newGrid = new ConcurrentDictionary<(int, int), int>();
     foreach (var r in Range(0, rows + 1))
@@ -87,11 +87,11 @@ public class MarsMap
   {
     foreach (var cell in lowResMap)
     {
-      var rowRangeCount = cell.UpperRightRow - cell.LowerLeftRow + 1;
-      var colRangeCount = cell.UpperRightColumn - cell.LowerLeftColumn + 1;
+      var rowRangeCount = cell.UpperRightX - cell.LowerLeftX + 1;
+      var colRangeCount = cell.UpperRightY - cell.LowerLeftY + 1;
 
-      foreach (var i in Range(cell.LowerLeftRow, rowRangeCount))
-        foreach (var j in Range(cell.LowerLeftColumn, colRangeCount))
+      foreach (var i in Range(cell.LowerLeftX, rowRangeCount))
+        foreach (var j in Range(cell.LowerLeftY, colRangeCount))
           Grid[(i, j)] = cell.AverageDifficulty;
     }
   }
