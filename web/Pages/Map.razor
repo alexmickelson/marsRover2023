@@ -124,12 +124,12 @@
   @if (game.Map != null && game.Path != null)
   {
     <div class="px-auto">
-      @foreach (var row in Range(BottomLeft.Item1 - 5, TopRight.Item1 - BottomLeft.Item1 + 10).Reverse())
+      @foreach (var y in Range(BottomLeft.Item2 - 5, TopRight.Item2 - BottomLeft.Item2 + 10).Reverse())
       {
         <div class="my-row">
-          @foreach (var col in Range(BottomLeft.Item2 - 5, TopRight.Item2 - BottomLeft.Item2 + 10))
+          @foreach (var x in Range(BottomLeft.Item1 - 5, TopRight.Item1 - BottomLeft.Item1 + 10))
           {
-            string myClass = calculateCellClass(row, col);
+            string myClass = calculateCellClass(x, y);
             <div class=@(myClass)>
             </div>
           }

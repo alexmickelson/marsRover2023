@@ -58,6 +58,13 @@ public class GameService : IGameService
     var request = new RestRequest(joinUrl);
     var response = await client.ExecuteGetAsync<MoveResponse>(request);
 
+    while (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+    {
+      System.Console.WriteLine("Got rate limited, sleeping");
+      Thread.Sleep(1000);
+      response = await client.ExecuteGetAsync<MoveResponse>(request);
+    }
+
     if (!response.IsSuccessful || response.Data == null)
     {
       System.Console.WriteLine(JsonSerializer.Serialize(response));

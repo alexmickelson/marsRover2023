@@ -47,7 +47,9 @@ public record JoinResponse(
 );
 
 public record Neighbor(
+  [property: JsonPropertyName("row")]
   int X,
+  [property: JsonPropertyName("column")]
   int Y,
   int Difficulty
 );

@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using static System.Linq.Enumerable;
 
-
 public class GamePlayer
 {
   private IGameService gameService;
@@ -47,6 +46,23 @@ public class GamePlayer
     System.Console.WriteLine("Registered for game");
   }
 
+  public async Task PlayGame()
+  {
+    CalculateDetailedPath();
+    while(true)
+    {
+      var watch = System.Diagnostics.Stopwatch.StartNew();
+      await Take1Step();
+      watch.Stop();
+      var elapsedMs = watch.ElapsedMilliseconds;
+      System.Console.WriteLine($"taking step took {elapsedMs} ms");
+
+      var watch2 = System.Diagnostics.Stopwatch.StartNew();
+      CalculateDetailedPath();
+      elapsedMs = watch2.ElapsedMilliseconds;
+      System.Console.WriteLine($"calculating path took {elapsedMs} ms");
+    }
+  }
   public void CalculateDetailedPath()
   {
     if (Map == null)
@@ -135,12 +151,12 @@ public class GamePlayer
       Path = Path.Skip(1);
 
     var nextLocation = Path.First();
-    System.Console.WriteLine(
-      $"Want to move to {nextLocation}, currently at {CurrentLocation}"
-    );
+    // System.Console.WriteLine(
+    //   $"Want to move to {nextLocation}, currently at {CurrentLocation}"
+    // );
     // Path = Path.Skip(1);
 
-    var xOffset = nextLocation.Item1 - CurrentLocation.Item1 ;
+    var xOffset = nextLocation.Item1 - CurrentLocation.Item1;
     var yOffset = nextLocation.Item2 - CurrentLocation.Item2;
 
     var desiredOrientation = (xOffset, yOffset) switch
@@ -162,8 +178,8 @@ public class GamePlayer
 
     if (response.X != nextLocation.Item1 || response.Y != nextLocation.Item2)
       System.Console.WriteLine(
-        $"Got back a differentcoordinate than we tried to get to." 
-        + $" wanted {(nextLocation.Item1,nextLocation.Item2)}, got {(response.X, response.Y)}"
+        $"Got back a differentcoordinate than we tried to get to."
+          + $" wanted {(nextLocation.Item1, nextLocation.Item2)}, got {(response.X, response.Y)}"
       );
 
     Map.UpdateGridWithNeighbors(response.Neighbors);
@@ -173,9 +189,9 @@ public class GamePlayer
   {
     while (Orientation != desiredOrientation)
     {
-      System.Console.WriteLine(
-        $"Facing {Orientation}, need to turn to face {desiredOrientation}"
-      );
+      // System.Console.WriteLine(
+      //   $"Facing {Orientation}, need to turn to face {desiredOrientation}"
+      // );
       var turnLeft =
         (Orientation == "East" && desiredOrientation == "North")
         || (Orientation == "North" && desiredOrientation == "West")
@@ -183,16 +199,16 @@ public class GamePlayer
         || (Orientation == "South" && desiredOrientation == "East");
       if (turnLeft)
       {
-        System.Console.WriteLine(
-          $"Need to turn left to face {desiredOrientation}"
-        );
+        // System.Console.WriteLine(
+        //   $"Need to turn left to face {desiredOrientation}"
+        // );
         await MoveAndUpdateStatus(Direction.Left);
       }
       else
       {
-        System.Console.WriteLine(
-          $"Need to turn right to face {desiredOrientation}"
-        );
+        // System.Console.WriteLine(
+        //   $"Need to turn right to face {desiredOrientation}"
+        // );
         await MoveAndUpdateStatus(Direction.Right);
       }
     }
@@ -203,17 +219,20 @@ public class GamePlayer
     var response = await gameService.Move(direction);
 
     System.Console.WriteLine(response.Message);
-    if (direction == Direction.Forward)
-      System.Console.WriteLine(
-        $"Moved to {(response.X, response.Y)} from {CurrentLocation}"
-      );
+    var batteryDiff = Battery - response.BatteryLevel;
+    if (direction == Direction.Forward) { }
+    // System.Console.WriteLine(
+    //   $"Moved to {(response.X, response.Y)} from {CurrentLocation}, cost {batteryDiff}"
+    // );
     else
       System.Console.WriteLine(
-        $"Turned to {response.Orientation} from {Orientation}"
+        $"Turned to {response.Orientation} from {Orientation}, cost {batteryDiff}"
       );
     Battery = response.BatteryLevel;
     Orientation = response.Orientation;
     CurrentLocation = (response.X, response.Y);
+    // response.Neighbors.ToList().ForEach(System.Console.WriteLine);
+    Map.UpdateGridWithNeighbors(response.Neighbors);
     return response;
   }
 }

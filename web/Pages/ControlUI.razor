@@ -35,6 +35,15 @@
     {
       stepInProgress = false;
     }
+    CalculatePath();
+  }
+  public async Task Go()
+  {
+    await game.PlayGame();
+  }
+  public void Refresh()
+  {
+    this.StateHasChanged();
   }
 }
 
@@ -43,6 +52,8 @@
   <button class="@(Styles.Btn) m-3" @onclick="OptimiseGrid">Optimise Grid</button>
   <button class="@(Styles.Btn) m-3" @onclick="CalculatePath">Calculate Path</button>
   <button class="@(Styles.Btn) m-3" @onclick="TakeStep" disabled="@stepInProgress">Take Step</button>
+  <button class="@(Styles.Btn) m-3" @onclick="Go">Follow Path</button>
+   <button class="@(Styles.Btn) m-3" @onclick="Refresh">Refresh</button>
 
   @if (game.Path != null)
   {
@@ -56,11 +67,11 @@
     <div>
     Battery: @game.Battery
   </div>
-    <div>
-    @foreach (var i in Range(0, 5))
-      {
-        <div>@i: @game.Path.ElementAt(i)</div>
-      }
-    </div>
+    @* <div>
+  @foreach (var i in Range(0, 5))
+  {
+  <div>@i: @game.Path.ElementAt(i)</div>
+  }
+  </div> *@
   }
 </div>
