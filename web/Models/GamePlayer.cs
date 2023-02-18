@@ -7,6 +7,7 @@ public class GamePlayer
   public MarsMap? Map { get; set; } = null;
   public IEnumerable<(int, int)> Path { get; set; }
   public (int, int) CurrentLocation { get; private set; } = default;
+  public (int, int) StartingLocation { get; private set; } = default;
   public (int, int) Target { get; private set; } = default;
 
   public (int, int) LowResCurrentLocation { get; private set; } = default;
@@ -32,6 +33,7 @@ public class GamePlayer
     Map = new MarsMap(response.LowResolutionMap, response.Neighbors);
 
     CurrentLocation = (response.StartingX, response.StartingY);
+    StartingLocation = CurrentLocation;
     Target = (response.TargetX, response.TargetY);
 
     LowResCurrentLocation = (

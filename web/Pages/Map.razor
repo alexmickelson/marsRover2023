@@ -76,16 +76,20 @@
   {
     this.StateHasChanged();
   }
-
   public (int, int) BottomLeft
   {
     get
     {
-      if (game.Path == null)
-        return (0, 0);
+      var lowX =
+      game.StartingLocation.Item1 < game.Target.Item1
+      ? game.StartingLocation.Item1
+      : game.Target.Item1;
 
-      var lowX = game.Path.Select(l => l.Item1).Min();
-      var lowY = game.Path.Select(l => l.Item2).Min();
+      var lowY =
+      game.StartingLocation.Item2 < game.Target.Item2
+      ? game.StartingLocation.Item2
+      : game.Target.Item2;
+
       return (lowX, lowY);
     }
   }
@@ -93,11 +97,8 @@
   {
     get
     {
-      if (game.Path == null)
-        return game.Map.TopRight;
-
-      var highX = game.Path.Select(l => l.Item1).Max();
-      var highY = game.Path.Select(l => l.Item2).Max();
+      var highX = game.StartingLocation.Item1 > game.Target.Item1 ? game.StartingLocation.Item1 : game.Target.Item1;
+      var highY = game.StartingLocation.Item2 > game.Target.Item2 ? game.StartingLocation.Item2 : game.Target.Item2;
       return (highX, highY);
     }
   }
@@ -121,7 +122,7 @@
 <div class="p-1">
   <button class="@(Styles.Btn)" onclick="@Refresh">Refresh Grid</button>
 
-  @if (game.Map != null && game.Path != null)
+  @if (game.Map != null)
   {
     <div class="px-auto">
       @foreach (var y in Range(BottomLeft.Item2 - 5, TopRight.Item2 - BottomLeft.Item2 + 10).Reverse())
