@@ -5,6 +5,7 @@ public class GamePlayer
 {
   private IGameService gameService;
   public event Action OnPositionChanged;
+  public event Action OnPathUpdated;
   public MarsMap? Map { get; set; } = null;
   public IEnumerable<(int, int)> Path { get; set; }
   public List<(int, int)> History { get; set; } = new();
@@ -157,12 +158,15 @@ public class GamePlayer
 
     var nextLocation = Path.First();
 
-    CheckIfTargetTooFar(nextLocation);
-    string desiredOrientation = calculateOrientation(nextLocation);
+    GameMovement.CheckIfTargetTooFar(startinglocation, nextLocation);
+    string desiredOrientation = GameMovement.CalculateOrientation(
+      startinglocation,
+      nextLocation
+    );
     await turnToFaceCorrectDirection(desiredOrientation);
 
     var response = await MoveAndUpdateStatus(Direction.Forward);
-    checkIfNewLocationUnexpected(nextLocation, response);
+    GameMovement.CheckIfNewLocationUnexpected(nextLocation, response);
 
     OnPositionChanged?.Invoke();
     Map.UpdateGridWithNeighbors(response.Neighbors);
@@ -171,48 +175,6 @@ public class GamePlayer
     return (StartingLocation, nextLocation, batteryDiff);
   }
 
-  private static void checkIfNewLocationUnexpected(
-    (int, int) nextLocation,
-    MoveResponse response
-  )
-  {
-    if (response.X != nextLocation.Item1 || response.Y != nextLocation.Item2)
-      System.Console.WriteLine(
-        $"Got back a different coordinate than we tried to get to."
-          + $" wanted {(nextLocation.Item1, nextLocation.Item2)}, got {(response.X, response.Y)}"
-      );
-  }
-
-  private string calculateOrientation((int, int) nextLocation)
-  {
-    var xOffset = nextLocation.Item1 - CurrentLocation.Item1;
-    var yOffset = nextLocation.Item2 - CurrentLocation.Item2;
-
-    var desiredOrientation = (xOffset, yOffset) switch
-    {
-      (0, 1) => "North",
-      (0, -1) => "South",
-      (1, 0) => "East",
-      (-1, 0) => "West",
-      (0, 0) => throw new Exception("Cannot move to same position"),
-      _
-        => throw new Exception(
-          $"Error detecting direction, {(xOffset, yOffset)}"
-        ),
-    };
-    return desiredOrientation;
-  }
-
-  private void CheckIfTargetTooFar((int, int) nextLocation)
-  {
-    if (
-      Math.Abs(nextLocation.Item1 - CurrentLocation.Item1) > 1
-      || Math.Abs(nextLocation.Item2 - CurrentLocation.Item2) > 1
-    )
-      System.Console.WriteLine(
-        $"Trying to get to location more than one square away, current: {CurrentLocation}, target: {nextLocation}"
-      );
-  }
 
   private async Task turnToFaceCorrectDirection(string desiredOrientation)
   {
@@ -239,23 +201,13 @@ public class GamePlayer
     var response = await gameService.Move(direction);
 
     var batteryDiff = Battery - response.BatteryLevel;
-    var newLocation = (response.X, response.Y);
-    // if (direction == Direction.Forward)
-    // {
-    //   System.Console.WriteLine(
-    //     $"Moved to {(response.X, response.Y)} from {CurrentLocation}, cost {batteryDiff}"
-    //   );
-    // }
-    // else
-    //   System.Console.WriteLine(
-    //     $"Turned to {response.Orientation} from {Orientation}, cost {batteryDiff}"
-    //   );
+
     Battery = response.BatteryLevel;
     Orientation = response.Orientation;
     History.Add(CurrentLocation);
     Map.UpdateGridWithNeighbors(response.Neighbors);
 
-    CurrentLocation = newLocation;
+    CurrentLocation = (response.X, response.Y);
     return response;
   }
 }
