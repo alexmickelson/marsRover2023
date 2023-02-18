@@ -45,8 +45,6 @@
 };
   public string calculateCellClass(int x, int y)
   {
-    @* var closeToRover = Math.Abs(row - game.CurrentLocation.Item1) < 2 && Math.Abs(col - game.CurrentLocation.Item2) < 2;
-*@
     var location = (x, y);
 
     if (location == game.CurrentLocation)
@@ -60,6 +58,8 @@
 
     if (game.Path != null && game.Path.Contains(location))
       return "cell bg-rose-900";
+    if (game.History.Contains(location))
+      return "cell bg-slate-500";
 
 
 
@@ -75,6 +75,10 @@
   public void Refresh()
   {
     this.StateHasChanged();
+  }
+  protected override void OnInitialized()
+  {
+    game.OnPositionChanged += async () => await InvokeAsync(() => StateHasChanged());
   }
   public (int, int) BottomLeft
   {

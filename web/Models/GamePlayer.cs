@@ -4,8 +4,10 @@ using static System.Linq.Enumerable;
 public class GamePlayer
 {
   private IGameService gameService;
+  public event Action OnPositionChanged;
   public MarsMap? Map { get; set; } = null;
   public IEnumerable<(int, int)> Path { get; set; }
+  public List<(int, int)> History { get; set; } = new();
   public (int, int) CurrentLocation { get; private set; } = default;
   public (int, int) StartingLocation { get; private set; } = default;
   public (int, int) Target { get; private set; } = default;
@@ -51,7 +53,7 @@ public class GamePlayer
   public async Task PlayGame()
   {
     CalculateDetailedPath();
-    while(true)
+    while (true)
     {
       var watch = System.Diagnostics.Stopwatch.StartNew();
       await Take1Step();
@@ -65,6 +67,7 @@ public class GamePlayer
       System.Console.WriteLine($"calculating path took {elapsedMs} ms");
     }
   }
+
   public void CalculateDetailedPath()
   {
     if (Map == null)
@@ -144,19 +147,10 @@ public class GamePlayer
 
   public async Task Take1Step()
   {
-    // System.Console.WriteLine("starting at location:");
-    // System.Console.WriteLine(CurrentLocation);
-    // System.Console.WriteLine("path starts at");
-    // System.Console.WriteLine(Path.First());
-
     while (Path.First() == CurrentLocation)
       Path = Path.Skip(1);
 
     var nextLocation = Path.First();
-    // System.Console.WriteLine(
-    //   $"Want to move to {nextLocation}, currently at {CurrentLocation}"
-    // );
-    // Path = Path.Skip(1);
 
     var xOffset = nextLocation.Item1 - CurrentLocation.Item1;
     var yOffset = nextLocation.Item2 - CurrentLocation.Item2;
@@ -184,6 +178,7 @@ public class GamePlayer
           + $" wanted {(nextLocation.Item1, nextLocation.Item2)}, got {(response.X, response.Y)}"
       );
 
+    OnPositionChanged?.Invoke();
     Map.UpdateGridWithNeighbors(response.Neighbors);
   }
 
@@ -222,16 +217,19 @@ public class GamePlayer
 
     System.Console.WriteLine(response.Message);
     var batteryDiff = Battery - response.BatteryLevel;
-    if (direction == Direction.Forward) { }
-    // System.Console.WriteLine(
-    //   $"Moved to {(response.X, response.Y)} from {CurrentLocation}, cost {batteryDiff}"
-    // );
+    if (direction == Direction.Forward)
+    {
+      System.Console.WriteLine(
+        $"Moved to {(response.X, response.Y)} from {CurrentLocation}, cost {batteryDiff}"
+      );
+    }
     else
       System.Console.WriteLine(
         $"Turned to {response.Orientation} from {Orientation}, cost {batteryDiff}"
       );
     Battery = response.BatteryLevel;
     Orientation = response.Orientation;
+    History.Add(CurrentLocation);
     CurrentLocation = (response.X, response.Y);
     // response.Neighbors.ToList().ForEach(System.Console.WriteLine);
     Map.UpdateGridWithNeighbors(response.Neighbors);
