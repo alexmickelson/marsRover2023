@@ -61,8 +61,6 @@
     if (game.History.Contains(location))
       return "cell bg-slate-500";
 
-
-
     if (!game.Map.Grid.ContainsKey(location))
       return "";
     var colorKey = game.Map.Grid[location] / 10;
@@ -71,10 +69,6 @@
       return "cell bg-rose-" + Colors[colorKey];
 
     return "cell bg-rose-900";
-  }
-  public void Refresh()
-  {
-    this.StateHasChanged();
   }
   protected override void OnInitialized()
   {
@@ -124,7 +118,6 @@
 </style>
 
 <div class="p-1">
-  <button class="@(Styles.Btn)" onclick="@Refresh">Refresh Grid</button>
 
   @if (game.Map != null)
   {

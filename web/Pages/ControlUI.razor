@@ -2,6 +2,10 @@
 @inject GamePlayer game
 
 @code {
+  protected override void OnInitialized()
+  {
+    game.OnPositionChanged += async () => await InvokeAsync(() => StateHasChanged());
+  }
   public async Task CalculatePath()
   {
     System.Console.WriteLine("Started Path Calculation");
@@ -41,10 +45,6 @@
   {
     await game.PlayGame();
   }
-  public void Refresh()
-  {
-    this.StateHasChanged();
-  }
 }
 
 <div>
@@ -53,7 +53,6 @@
   <button class="@(Styles.Btn) m-3" @onclick="CalculatePath">Calculate Path</button>
   <button class="@(Styles.Btn) m-3" @onclick="TakeStep" disabled="@stepInProgress">Take Step</button>
   <button class="@(Styles.Btn) m-3" @onclick="Go">Follow Path</button>
-   <button class="@(Styles.Btn) m-3" @onclick="Refresh">Refresh</button>
 
   @if (game.Path != null)
   {

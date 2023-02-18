@@ -41,14 +41,14 @@ public class GameService : IGameService
     var joinUrl = $"/game/join?gameId={GameId}&name={Name}";
     var request = new RestRequest(joinUrl);
     var response = await client.ExecuteGetAsync<JoinResponse>(request);
-    if (!response.IsSuccessful)
+
+    if (!response.IsSuccessful || response.Data == null)
     {
       System.Console.WriteLine(JsonSerializer.Serialize(response));
-      throw new Exception("Could not join game, got null response");
+      System.Console.WriteLine(response.Content);
+      System.Console.WriteLine(response.StatusCode);
+      throw new Exception("Error Joining Game");
     }
-
-    // System.Console.WriteLine(response.Content);
-    // System.Console.WriteLine(response.Data);
     Token = response.Data.Token;
     return response.Data;
   }
@@ -58,7 +58,27 @@ public class GameService : IGameService
     var joinUrl = $"/game/moveperseverance?token={Token}&direction={direction}";
     var request = new RestRequest(joinUrl);
     var response = await client.ExecuteGetAsync<MoveResponse>(request);
+    response = await sleepIfBatteryLow(request, response);
+    response = await SleepIfRateLimited(request, response);
 
+    if (!response.IsSuccessful || response.Data == null)
+    {
+      System.Console.WriteLine(JsonSerializer.Serialize(response));
+      System.Console.WriteLine(response.Content);
+      System.Console.WriteLine(response.StatusCode);
+      System.Console.WriteLine(response.Data?.Message);
+      throw new Exception("Could not move perserverance, got null response");
+    }
+    if (!response.Data.Message.ToLower().Contains(" ok"))
+      System.Console.WriteLine(response.Data.Message);
+    return response.Data;
+  }
+
+  private async Task<RestResponse<MoveResponse>> SleepIfRateLimited(
+    RestRequest request,
+    RestResponse<MoveResponse> response
+  )
+  {
     while (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
     {
       System.Console.WriteLine("Got rate limited, sleeping");
@@ -66,14 +86,25 @@ public class GameService : IGameService
       response = await client.ExecuteGetAsync<MoveResponse>(request);
     }
 
-    if (!response.IsSuccessful || response.Data == null)
+    return response;
+  }
+
+  private async Task<RestResponse<MoveResponse>> sleepIfBatteryLow(
+    RestRequest request,
+    RestResponse<MoveResponse> response
+  )
+  {
+    while (
+      response.Data != null
+      && response.Data.Message.ToLower().Contains("recharge")
+    )
     {
-      System.Console.WriteLine(JsonSerializer.Serialize(response));
-      System.Console.WriteLine(response.Content);
-      System.Console.WriteLine(response.StatusCode);
-      throw new Exception("Could not move perserverance, got null response");
+      System.Console.WriteLine("not enough battery, sleeping");
+      Thread.Sleep(1000);
+      response = await client.ExecuteGetAsync<MoveResponse>(request);
     }
-    return response.Data;
+
+    return response;
   }
 
   public async Task<MoveResponse> MoveInenuity(int row, int col)
@@ -81,13 +112,16 @@ public class GameService : IGameService
     var joinUrl =
       $"/game/moveingenuity?token={Token}&destinationRow={row}&destinationColumn={col}";
     var request = new RestRequest(joinUrl);
-    var response = await client.GetAsync<MoveResponse>(request);
+    var response = await client.ExecuteGetAsync<MoveResponse>(request);
 
-    if (response == null)
+    if (!response.IsSuccessful || response.Data == null)
     {
       System.Console.WriteLine(JsonSerializer.Serialize(response));
+      System.Console.WriteLine(response.Content);
+      System.Console.WriteLine(response.StatusCode);
+      System.Console.WriteLine(response.Data?.Message);
       throw new Exception("Could not move ingenuity, got null response");
     }
-    return response;
+    return response.Data;
   }
 }
