@@ -75,6 +75,7 @@
   {
     Action refreshFromAnotherThread = () => this.InvokeAsync(this.StateHasChanged);
     game.OnPositionChanged += refreshFromAnotherThread;
+    game.OnPathUpdated += refreshFromAnotherThread;
   }
   public (int, int) BottomLeft
   {

@@ -15,7 +15,8 @@ public class GamePlayer
   public (int, int) Target { get; private set; } = default;
   public (int, int) LowResCurrentLocation { get; private set; } = default;
   public (int, int) LowResTarget { get; private set; } = default;
-  public IEnumerable<(int, int)> LowResPath { get; set; }
+
+  // public IEnumerable<(int, int)> LowResPath { get; set; }
   public int Battery { get; set; }
   public string Orientation { get; set; }
 
@@ -48,11 +49,6 @@ public class GamePlayer
     );
 
     System.Console.WriteLine("Registered for game");
-
-    Action recalculatePath = async () =>
-      await Task.Run(() => CalculateDetailedPath()).ConfigureAwait(false);
-    OnPositionChanged += recalculatePath;
-    Map.OnMapUpdated += recalculatePath;
   }
 
   public async Task PlayGame()
@@ -64,6 +60,8 @@ public class GamePlayer
       System.Console.WriteLine(
         $"{start} -> {end}, cost: {cost}, time: {time} ms"
       );
+
+      CalculateDetailedPath();
     }
   }
 
@@ -77,8 +75,6 @@ public class GamePlayer
     {
       if (Map.OptimizedGrid != null)
       {
-        System.Console.WriteLine("total cells");
-        System.Console.WriteLine(Map.OptimizedGrid.Count());
         Path = MapPath.CalculatePath(
           Map.OptimizedGrid,
           CurrentLocation,
@@ -104,46 +100,42 @@ public class GamePlayer
       Task.Run(() => OnPathUpdated());
   }
 
-  public void CalculateLowResPath()
-  {
-    if (Map == null)
-      throw new NullReferenceException("map cannot be null in detailed path");
+  // public void CalculateLowResPath()
+  // {
+  //   if (Map == null)
+  //     throw new NullReferenceException("map cannot be null in detailed path");
 
-    LowResPath = MapPath.CalculatePath(
-      Map.LowResGrid,
-      LowResCurrentLocation,
-      LowResTarget,
-      Map.LowResTopRight
-    );
-  }
+  //   LowResPath = MapPath.CalculatePath(
+  //     Map.LowResGrid,
+  //     LowResCurrentLocation,
+  //     LowResTarget,
+  //     Map.LowResTopRight
+  //   );
+  // }
 
   public void OptimizeGrid()
   {
-    CalculateLowResPath();
+    CalculateDetailedPath();
 
     var newGrid = new ConcurrentDictionary<(int, int), int>();
 
-    var detailedLocationsInLowResPath = new List<(int, int)>();
+    // var detailedLocationsInLowResPath = new List<(int, int)>();
 
-    foreach (var lowResLocation in LowResPath)
-    {
-      var startingX = lowResLocation.Item1 * Map.LowResScaleFactor;
-      var startingY = lowResLocation.Item2 * Map.LowResScaleFactor;
-      foreach (var x in Range(startingX, Map.LowResScaleFactor))
-      {
-        foreach (var y in Range(startingY, Map.LowResScaleFactor))
-        {
-          newGrid[(x, y)] = Map.Grid[(x, y)];
-        }
-      }
-    }
+    // foreach (var lowResLocation in Path)
+    // {
+    //   var startingX = lowResLocation.Item1 * Map.LowResScaleFactor;
+    //   var startingY = lowResLocation.Item2 * Map.LowResScaleFactor;
+    //   foreach (var x in Range(startingX, Map.LowResScaleFactor))
+    //   {
+    //     foreach (var y in Range(startingY, Map.LowResScaleFactor))
+    //     {
+    //       newGrid[(x, y)] = Map.Grid[(x, y)];
+    //     }
+    //   }
+    // }
 
     Map.Grid.Keys
-      .Where(
-        (l) =>
-          (Math.Abs(Target.Item1 - l.Item1) < 10)
-          && (Math.Abs(Target.Item2 - l.Item2) < 10)
-      )
+      .Where((l) => pointCloseToTarget(l) || pointCloseToPath(l))
       .ToList()
       .ForEach(k =>
       {
@@ -152,6 +144,27 @@ public class GamePlayer
       });
 
     Map.OptimizedGrid = newGrid;
+  }
+
+  private bool pointCloseToTarget((int, int) l)
+  {
+    var range = 30;
+    return (Math.Abs(Target.Item1 - l.Item1) < range)
+      && (Math.Abs(Target.Item2 - l.Item2) < range);
+  }
+
+  private bool pointCloseToPath((int, int) l)
+  {
+    var range = 30;
+
+    var pointsInRange = Path.Where(
+        p =>
+          Math.Abs(p.Item1 - l.Item1) < range
+          && Math.Abs(p.Item2 - l.Item2) < range
+      )
+      .Count();
+
+    return pointsInRange > 0;
   }
 
   public async Task<(

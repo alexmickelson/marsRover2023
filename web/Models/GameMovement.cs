@@ -18,10 +18,10 @@ public class GameMovement
 
     var desiredOrientation = (xOffset, yOffset) switch
     {
-      (0, 1) => "North",
-      (0, -1) => "South",
-      (1, 0) => "East",
-      (-1, 0) => "West",
+      (0, > 0) => "North",
+      (0, < 0) => "South",
+      (> 0, 0) => "East",
+      (< 0, 0) => "West",
       (0, 0) => throw new Exception("Cannot move to same position"),
       _
         => throw new Exception(

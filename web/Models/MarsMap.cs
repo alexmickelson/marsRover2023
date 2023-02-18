@@ -7,7 +7,6 @@ public class MarsMap
   public ConcurrentDictionary<(int, int), int> OptimizedGrid { get; set; }
   public ConcurrentDictionary<(int, int), int> LowResGrid { get; private set; }
   public IEnumerable<LowResolutionMap> LowResolutionMaps { get; private set; }
-  public event Action OnMapUpdated;
   public int LowResScaleFactor { get; set; }
   public (int, int) TopRight { get; set; } = (0, 0);
   public (int, int) LowResTopRight { get; set; } = (0, 0);
@@ -67,8 +66,6 @@ public class MarsMap
       if (OptimizedGrid != null)
         OptimizedGrid[(neighbor.X, neighbor.Y)] = neighbor.Difficulty;
     }
-    if (OnMapUpdated != null)
-      Task.Run(() => OnMapUpdated());
   }
 
   private (ConcurrentDictionary<(int, int), int>, (int, int)) createEmptyGrid(
@@ -88,6 +85,9 @@ public class MarsMap
 
   private void setLowResMapValues(IEnumerable<LowResolutionMap> lowResMap)
   {
+    var xCount = lowResMap.Max(l => l.UpperRightX);
+    var yCount = lowResMap.Max(l => l.UpperRightY);
+
     foreach (var cell in lowResMap)
     {
       var xRangeCount = cell.UpperRightX - cell.LowerLeftX + 1;
@@ -95,8 +95,10 @@ public class MarsMap
 
       foreach (var x in Range(cell.LowerLeftX, xRangeCount))
         foreach (var y in Range(cell.LowerLeftY, yRangeCount))
-          Grid[(x, y)] = cell.AverageDifficulty;
+        {
+          if (x != 0 && x != xCount && y != 0 && y != yCount)
+            Grid[(x, y)] = cell.AverageDifficulty;
+        }
     }
   }
-
 }
