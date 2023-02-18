@@ -119,29 +119,35 @@ public class GamePlayer
 
     var newGrid = new ConcurrentDictionary<(int, int), int>();
 
-    // var detailedLocationsInLowResPath = new List<(int, int)>();
+    System.Console.WriteLine(Path.Count());
 
-    // foreach (var lowResLocation in Path)
-    // {
-    //   var startingX = lowResLocation.Item1 * Map.LowResScaleFactor;
-    //   var startingY = lowResLocation.Item2 * Map.LowResScaleFactor;
-    //   foreach (var x in Range(startingX, Map.LowResScaleFactor))
-    //   {
-    //     foreach (var y in Range(startingY, Map.LowResScaleFactor))
-    //     {
-    //       newGrid[(x, y)] = Map.Grid[(x, y)];
-    //     }
-    //   }
-    // }
+    foreach (var location in Path)
+    {
+      var neighbors = Range(location.Item1 - 10, 20)
+        .SelectMany((x) => Range(location.Item2 - 10, 20).Select(y => (x, y)));
 
-    Map.Grid.Keys
-      .Where((l) => pointCloseToTarget(l) || pointCloseToPath(l))
-      .ToList()
-      .ForEach(k =>
+      // neighbors.ToList().ForEach(p => System.Console.WriteLine(p));
+
+      foreach (var neighbor in neighbors)
       {
-        if (!newGrid.ContainsKey(k))
-          newGrid[k] = Map.Grid[k];
-      });
+        if (pointCloseToTarget(neighbor) || PointInGrid(neighbor))
+        {
+          if (Map.Grid.ContainsKey(neighbor))
+            newGrid[neighbor] = Map.Grid[neighbor];
+          else
+            newGrid[neighbor] = Map.LowResGrid[neighbor];
+        }
+      }
+    }
+
+    // Map.Grid.Keys
+    //   .Where((l) => pointCloseToTarget(l) || pointCloseToPath(l))
+    //   .ToList()
+    //   .ForEach(k =>
+    //   {
+    //     if (!newGrid.ContainsKey(k))
+    //       newGrid[k] = Map.Grid[k];
+    //   });
 
     Map.OptimizedGrid = newGrid;
   }
@@ -153,18 +159,12 @@ public class GamePlayer
       && (Math.Abs(Target.Item2 - l.Item2) < range);
   }
 
-  private bool pointCloseToPath((int, int) l)
+  public bool PointInGrid((int, int) l)
   {
-    var range = 30;
-
-    var pointsInRange = Path.Where(
-        p =>
-          Math.Abs(p.Item1 - l.Item1) < range
-          && Math.Abs(p.Item2 - l.Item2) < range
-      )
-      .Count();
-
-    return pointsInRange > 0;
+    return l.Item1 >= 0
+      && l.Item1 <= Map.TopRight.Item1
+      && l.Item2 >= 0
+      && l.Item2 <= Map.TopRight.Item2;
   }
 
   public async Task<(

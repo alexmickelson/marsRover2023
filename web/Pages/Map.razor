@@ -77,6 +77,7 @@
     game.OnPositionChanged += refreshFromAnotherThread;
     game.OnPathUpdated += refreshFromAnotherThread;
   }
+  public int MyBuffer = 20;
   public (int, int) BottomLeft
   {
     get
@@ -91,7 +92,7 @@
       ? game.StartingLocation.Item2
       : game.Target.Item2;
 
-      return (lowX, lowY);
+      return (lowX - MyBuffer, lowY - MyBuffer);
     }
   }
   public (int, int) TopRight
@@ -100,7 +101,7 @@
     {
       var highX = game.StartingLocation.Item1 > game.Target.Item1 ? game.StartingLocation.Item1 : game.Target.Item1;
       var highY = game.StartingLocation.Item2 > game.Target.Item2 ? game.StartingLocation.Item2 : game.Target.Item2;
-      return (highX, highY);
+      return (highX + MyBuffer, highY + MyBuffer);
     }
   }
 }
@@ -125,10 +126,10 @@
   @if (game.Map != null)
   {
     <div class="px-auto">
-      @foreach (var y in Range(BottomLeft.Item2 - 5, TopRight.Item2 - BottomLeft.Item2 + 10).Reverse())
+      @foreach (var y in Range(BottomLeft.Item2, TopRight.Item2 - BottomLeft.Item2).Reverse())
       {
         <div class="my-row">
-          @foreach (var x in Range(BottomLeft.Item1 - 5, TopRight.Item1 - BottomLeft.Item1 + 10))
+          @foreach (var x in Range(BottomLeft.Item1 , TopRight.Item1 - BottomLeft.Item1))
           {
             string myClass = calculateCellClass(x, y);
             <div class=@(myClass)>

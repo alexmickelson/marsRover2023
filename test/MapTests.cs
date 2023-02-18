@@ -3,7 +3,7 @@ public class MapTests
   [Test]
   public void CanCreateMap()
   {
-    var map = new MarsMap();
+    var map = new MarsMap(default, default);
     map.Should().NotBeNull();
   }
 
@@ -136,5 +136,4 @@ public class MapTests
     var map = new MarsMap(lowResMap, neighbors);
     map.Grid[(0, 6)].Should().Be(0);
   }
-
 }

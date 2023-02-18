@@ -9,12 +9,6 @@ public class MarsMap
   public IEnumerable<LowResolutionMap> LowResolutionMaps { get; private set; }
   public int LowResScaleFactor { get; set; }
   public (int, int) TopRight { get; set; } = (0, 0);
-  public (int, int) LowResTopRight { get; set; } = (0, 0);
-
-  public MarsMap()
-  {
-    Grid = new() { [(0, 0)] = 1 };
-  }
 
   public MarsMap(
     IEnumerable<LowResolutionMap> lowResMap,
@@ -43,19 +37,17 @@ public class MarsMap
     LowResScaleFactor =
       lowResMap.First().UpperRightX - lowResMap.First().LowerLeftX + 1;
 
-    var maxX = 0;
-    var maxY = 0;
     foreach (var lowRes in lowResMap)
     {
-      var scaledX = lowRes.LowerLeftX / LowResScaleFactor;
-      var scaledY = lowRes.LowerLeftY / LowResScaleFactor;
-      LowResGrid[(scaledX, scaledY)] = lowRes.AverageDifficulty;
-      if (scaledY > maxY)
-        maxY = scaledY;
-      if (scaledX > maxX)
-        maxX = scaledX;
+      Range(lowRes.LowerLeftX, lowRes.UpperRightX - lowRes.LowerLeftX + 1)
+        .ToList()
+        .ForEach(
+          x =>
+            Range(lowRes.LowerLeftY, lowRes.UpperRightY - lowRes.LowerLeftY + 1)
+              .ToList()
+              .ForEach((y) => LowResGrid[(x, y)] = lowRes.AverageDifficulty)
+        );
     }
-    LowResTopRight = (maxX, maxY);
   }
 
   public void UpdateGridWithNeighbors(IEnumerable<Neighbor> neighbors)
