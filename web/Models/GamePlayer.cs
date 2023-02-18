@@ -48,6 +48,11 @@ public class GamePlayer
     );
 
     System.Console.WriteLine("Registered for game");
+
+    Action recalculatePath = async () =>
+      await Task.Run(() => CalculateDetailedPath()).ConfigureAwait(false);
+    OnPositionChanged += recalculatePath;
+    Map.OnMapUpdated += recalculatePath;
   }
 
   public async Task PlayGame()
@@ -59,8 +64,6 @@ public class GamePlayer
       System.Console.WriteLine(
         $"{start} -> {end}, cost: {cost}, time: {time} ms"
       );
-
-      await Task.Run(() => CalculateDetailedPath()).ConfigureAwait(false);
     }
   }
 
