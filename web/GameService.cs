@@ -41,13 +41,14 @@ public class GameService : IGameService
     var joinUrl = $"/game/join?gameId={GameId}&name={Name}";
     var request = new RestRequest(joinUrl);
     var response = await client.ExecuteGetAsync<JoinResponse>(request);
-
     if (!response.IsSuccessful)
     {
       System.Console.WriteLine(JsonSerializer.Serialize(response));
       throw new Exception("Could not join game, got null response");
     }
 
+    // System.Console.WriteLine(response.Content);
+    // System.Console.WriteLine(response.Data);
     Token = response.Data.Token;
     return response.Data;
   }
