@@ -86,12 +86,16 @@ public class GameService : IGameService
       )
     )
     {
+      var sleepTime = 1000;
       if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+      {
         System.Console.WriteLine("Got rate limited, sleeping");
+        sleepTime = 300;
+      }
       else
         System.Console.WriteLine("not enough battery, sleeping");
 
-      Thread.Sleep(1000);
+      Thread.Sleep(sleepTime);
       response = await client.ExecuteGetAsync<MoveResponse>(request);
     }
 

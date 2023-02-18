@@ -5,7 +5,8 @@
   protected override void OnInitialized()
   {
     Action refreshFromAnotherThread = () => this.InvokeAsync(this.StateHasChanged);
-    game.OnPositionChanged += refreshFromAnotherThread;  }
+    game.OnPositionChanged += refreshFromAnotherThread;
+  }
   public async Task CalculatePath()
   {
     System.Console.WriteLine("Started Path Calculation");
@@ -56,15 +57,10 @@
 
   @if (game.Path != null)
   {
-    <div class="text-sm">
-      Path Steps: @game.Path.Count()
-    </div>
-    <div>
-    Path Cost: @game.Map.CalculatePathCost(game.Path)
-  </div>
-    <div>
-    Battery: @game.Battery
-  </div>
+    <div class="text-sm">Path Length: @game.Path.Count()</div>
+    <div>Path Cost: @game.Map.CalculatePathCost(game.Path)</div>
+    <div>Battery: @game.Battery</div>
+    <div>Path Calulation Time: @game.LastPathCalulationTime ms</div>
     @* <div>
   @foreach (var i in Range(0, 5))
   {

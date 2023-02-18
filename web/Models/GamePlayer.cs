@@ -8,11 +8,11 @@ public class GamePlayer
   public event Action OnPathUpdated;
   public MarsMap? Map { get; set; } = null;
   public IEnumerable<(int, int)> Path { get; set; } = new (int, int)[] { };
+  public int LastPathCalulationTime { get; private set; }
   public List<(int, int)> History { get; set; } = new();
   public (int, int) CurrentLocation { get; private set; } = default;
   public (int, int) StartingLocation { get; private set; } = default;
   public (int, int) Target { get; private set; } = default;
-
   public (int, int) LowResCurrentLocation { get; private set; } = default;
   public (int, int) LowResTarget { get; private set; } = default;
   public IEnumerable<(int, int)> LowResPath { get; set; }
@@ -60,12 +60,11 @@ public class GamePlayer
         $"{start} -> {end}, cost: {cost}, time: {time} ms"
       );
 
-      var pathCalcTime = CalculateDetailedPath();
-      System.Console.WriteLine($"calculating path took {pathCalcTime} ms");
+      await Task.Run(() => CalculateDetailedPath()).ConfigureAwait(false);
     }
   }
 
-  public int CalculateDetailedPath()
+  public void CalculateDetailedPath()
   {
     if (Map == null)
       throw new NullReferenceException("map cannot be null in detailed path");
@@ -95,12 +94,11 @@ public class GamePlayer
       }
     }
     pathTimer.Stop();
-    var elapsedMs = pathTimer.ElapsedMilliseconds;
+    int elapsedMs = (int)pathTimer.ElapsedMilliseconds;
+    LastPathCalulationTime = elapsedMs;
 
     if (OnPathUpdated != null)
       Task.Run(() => OnPathUpdated());
-
-    return (int)elapsedMs;
   }
 
   public void CalculateLowResPath()
