@@ -74,7 +74,7 @@ public class GamePlayer
     {
       System.Console.WriteLine("total cells");
       System.Console.WriteLine(Map.OptimizedGrid.Count());
-      Path = MarsMap.CalculatePath(
+      Path = MapPath.CalculatePath(
         Map.OptimizedGrid,
         CurrentLocation,
         Target,
@@ -83,7 +83,7 @@ public class GamePlayer
     }
     else
     {
-      Path = MarsMap.CalculatePath(
+      Path = MapPath.CalculatePath(
         Map.Grid,
         CurrentLocation,
         Target,
@@ -97,7 +97,7 @@ public class GamePlayer
     if (Map == null)
       throw new NullReferenceException("map cannot be null in detailed path");
 
-    LowResPath = MarsMap.CalculatePath(
+    LowResPath = MapPath.CalculatePath(
       Map.LowResGrid,
       LowResCurrentLocation,
       LowResTarget,
