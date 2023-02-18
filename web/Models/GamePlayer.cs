@@ -7,7 +7,7 @@ public class GamePlayer
   public event Action OnPositionChanged;
   public event Action OnPathUpdated;
   public MarsMap? Map { get; set; } = null;
-  public IEnumerable<(int, int)> Path { get; set; }
+  public IEnumerable<(int, int)> Path { get; set; } = new (int, int)[] { };
   public List<(int, int)> History { get; set; } = new();
   public (int, int) CurrentLocation { get; private set; } = default;
   public (int, int) StartingLocation { get; private set; } = default;
@@ -55,47 +55,52 @@ public class GamePlayer
     CalculateDetailedPath();
     while (true)
     {
-      var watch = System.Diagnostics.Stopwatch.StartNew();
-      var (start, end, cost) = await Take1Step();
-      watch.Stop();
-      var elapsedMs = watch.ElapsedMilliseconds;
-
+      var (start, end, cost, time) = await Take1Step();
       System.Console.WriteLine(
-        $"{start} -> {end}, cost: {cost}, time: {elapsedMs} ms"
+        $"{start} -> {end}, cost: {cost}, time: {time} ms"
       );
 
-      var watch2 = System.Diagnostics.Stopwatch.StartNew();
-      CalculateDetailedPath();
-      elapsedMs = watch2.ElapsedMilliseconds;
-      System.Console.WriteLine($"calculating path took {elapsedMs} ms");
+      var pathCalcTime = CalculateDetailedPath();
+      System.Console.WriteLine($"calculating path took {pathCalcTime} ms");
     }
   }
 
-  public void CalculateDetailedPath()
+  public int CalculateDetailedPath()
   {
     if (Map == null)
       throw new NullReferenceException("map cannot be null in detailed path");
 
-    if (Map.OptimizedGrid != null)
+    var pathTimer = System.Diagnostics.Stopwatch.StartNew();
+    lock (Path)
     {
-      System.Console.WriteLine("total cells");
-      System.Console.WriteLine(Map.OptimizedGrid.Count());
-      Path = MapPath.CalculatePath(
-        Map.OptimizedGrid,
-        CurrentLocation,
-        Target,
-        Map.TopRight
-      );
+      if (Map.OptimizedGrid != null)
+      {
+        System.Console.WriteLine("total cells");
+        System.Console.WriteLine(Map.OptimizedGrid.Count());
+        Path = MapPath.CalculatePath(
+          Map.OptimizedGrid,
+          CurrentLocation,
+          Target,
+          Map.TopRight
+        );
+      }
+      else
+      {
+        Path = MapPath.CalculatePath(
+          Map.Grid,
+          CurrentLocation,
+          Target,
+          Map.TopRight
+        );
+      }
     }
-    else
-    {
-      Path = MapPath.CalculatePath(
-        Map.Grid,
-        CurrentLocation,
-        Target,
-        Map.TopRight
-      );
-    }
+    pathTimer.Stop();
+    var elapsedMs = pathTimer.ElapsedMilliseconds;
+
+    if (OnPathUpdated != null)
+      Task.Run(() => OnPathUpdated());
+
+    return (int)elapsedMs;
   }
 
   public void CalculateLowResPath()
@@ -148,8 +153,14 @@ public class GamePlayer
     Map.OptimizedGrid = newGrid;
   }
 
-  public async Task<((int, int) start, (int, int) end, int cost)> Take1Step()
+  public async Task<(
+    (int, int) start,
+    (int, int) end,
+    int cost,
+    int time
+  )> Take1Step()
   {
+    var moveTimer = System.Diagnostics.Stopwatch.StartNew();
     var startingBattery = Battery;
     var startinglocation = CurrentLocation;
 
@@ -168,13 +179,17 @@ public class GamePlayer
     var response = await MoveAndUpdateStatus(Direction.Forward);
     GameMovement.CheckIfNewLocationUnexpected(nextLocation, response);
 
-    OnPositionChanged?.Invoke();
+    if (OnPositionChanged != null)
+      await Task.Run(() => OnPositionChanged()).ConfigureAwait(false);
+
     Map.UpdateGridWithNeighbors(response.Neighbors);
 
     var batteryDiff = startingBattery - Battery;
-    return (StartingLocation, nextLocation, batteryDiff);
-  }
 
+    moveTimer.Stop();
+    var elapsedMs = moveTimer.ElapsedMilliseconds;
+    return (StartingLocation, nextLocation, batteryDiff, (int)elapsedMs);
+  }
 
   private async Task turnToFaceCorrectDirection(string desiredOrientation)
   {

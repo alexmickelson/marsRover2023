@@ -58,8 +58,7 @@ public class GameService : IGameService
     var joinUrl = $"/game/moveperseverance?token={Token}&direction={direction}";
     var request = new RestRequest(joinUrl);
     var response = await client.ExecuteGetAsync<MoveResponse>(request);
-    response = await sleepIfBatteryLow(request, response);
-    response = await SleepIfRateLimited(request, response);
+    response = await sleepIfBatteryLowOrRateLimited(request, response);
 
     if (!response.IsSuccessful || response.Data == null)
     {
@@ -74,32 +73,24 @@ public class GameService : IGameService
     return response.Data;
   }
 
-  private async Task<RestResponse<MoveResponse>> SleepIfRateLimited(
-    RestRequest request,
-    RestResponse<MoveResponse> response
-  )
-  {
-    while (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-    {
-      System.Console.WriteLine("Got rate limited, sleeping");
-      Thread.Sleep(1000);
-      response = await client.ExecuteGetAsync<MoveResponse>(request);
-    }
-
-    return response;
-  }
-
-  private async Task<RestResponse<MoveResponse>> sleepIfBatteryLow(
+  private async Task<RestResponse<MoveResponse>> sleepIfBatteryLowOrRateLimited(
     RestRequest request,
     RestResponse<MoveResponse> response
   )
   {
     while (
-      response.Data != null
-      && response.Data.Message.ToLower().Contains("recharge")
+      response.StatusCode == System.Net.HttpStatusCode.TooManyRequests
+      || (
+        response.Data != null
+        && response.Data.Message.ToLower().Contains("recharge")
+      )
     )
     {
-      System.Console.WriteLine("not enough battery, sleeping");
+      if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        System.Console.WriteLine("Got rate limited, sleeping");
+      else
+        System.Console.WriteLine("not enough battery, sleeping");
+
       Thread.Sleep(1000);
       response = await client.ExecuteGetAsync<MoveResponse>(request);
     }

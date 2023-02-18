@@ -4,8 +4,8 @@
 @code {
   protected override void OnInitialized()
   {
-    game.OnPositionChanged += async () => await InvokeAsync(() => StateHasChanged());
-  }
+    Action refreshFromAnotherThread = () => this.InvokeAsync(this.StateHasChanged);
+    game.OnPositionChanged += refreshFromAnotherThread;  }
   public async Task CalculatePath()
   {
     System.Console.WriteLine("Started Path Calculation");

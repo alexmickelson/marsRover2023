@@ -70,9 +70,11 @@
 
     return "cell bg-rose-900";
   }
+
   protected override void OnInitialized()
   {
-    game.OnPositionChanged += async () => await InvokeAsync(() => StateHasChanged());
+    Action refreshFromAnotherThread = () => this.InvokeAsync(this.StateHasChanged);
+    game.OnPositionChanged += refreshFromAnotherThread;
   }
   public (int, int) BottomLeft
   {
