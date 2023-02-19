@@ -8,10 +8,6 @@
   {
     await game.Register(gameId, name);
   }
-  private void refresh()
-  {
-    this.StateHasChanged();
-  }
 }
 
 <PageTitle>Index</PageTitle>
@@ -32,18 +28,13 @@
         Register for Game
       </button>
     </form>
-    <div>
-      <button class="@(Styles.Btn) m-5" onclick="refresh">
-        refresh stats
-      </button>
-    </div>
   </div>
 </div>
 
 @if (game.Map != null)
 {
   <div>
-  Current Location: @game.Rover.CurrentLocation, Orientation: @game.Rover.Orientation, Target: @game.Target
+  Current Location: @game.Rover.CurrentLocation, Orientation: @game.Rover.Orientation, Target: @game.Rover.Target
 </div>
   <ControlUI />
   <Map />

@@ -6,7 +6,6 @@ public class GamePlayer
   private IGameService gameService;
   public MarsMap? Map { get; set; } = null;
   public PerserveranceRover Rover { get; private set; }
-  public (int, int) Target { get; private set; } = default;
 
   public GamePlayer(IGameService gameService)
   {
@@ -21,13 +20,18 @@ public class GamePlayer
 
     Map = new MarsMap(response.LowResolutionMap, response.Neighbors);
 
-    Target = (response.TargetX, response.TargetY);
+    var target = (response.TargetX, response.TargetY);
+    var start = (response.StartingX, response.StartingY);
+    var battery = 2000;
 
-    Rover = new PerserveranceRover(gameService, Map, Target);
-    Rover.Battery = 2000;
-    Rover.Orientation = response.Orientation;
-    Rover.CurrentLocation = (response.StartingX, response.StartingY);
-    Rover.StartingLocation = Rover.CurrentLocation;
+    Rover = new PerserveranceRover(
+      gameService: gameService,
+      map: Map,
+      start: start,
+      target: target,
+      battery: battery,
+      orientation: response.Orientation
+    );
 
     System.Console.WriteLine("Registered for game");
   }

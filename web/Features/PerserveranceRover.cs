@@ -1,24 +1,42 @@
 public class PerserveranceRover
 {
   private IGameService gameService;
-  public (int, int) CurrentLocation { get; set; } = default;
-  public (int, int) StartingLocation { get; set; } = default;
+  public (int, int) CurrentLocation { get; private set; } = default;
+  public (int, int) StartingLocation { get; private set; } = default;
   public int LastPathCalulationTime { get; private set; }
   public int LastGridOptimizationTime { get; private set; }
-  public string Orientation { get; set; }
-  public int Battery { get; set; }
-  public MarsMap? Map { get; set; } = null;
+  public string Orientation { get; private set; }
+  public int Battery { get; private set; }
+  public MarsMap? Map { get; private set; } = null;
   public List<(int, int)> History { get; set; } = new();
   public event Action OnPositionChanged;
   public event Action OnPathUpdated;
-  public IEnumerable<(int, int)> Path { get; set; } = new (int, int)[] { };
+  public IEnumerable<(int, int)> Path { get; private set; } =
+    new (int, int)[] { };
+
+  public int StartingPathCost { get; private set; }
+  public int TotalProjectedCost
+  {
+    get => Map.CalculatePathCost(History) + Map.CalculatePathCost(Path);
+  }
   public (int, int) Target { get; private set; } = default;
 
-  public PerserveranceRover(IGameService gameService, MarsMap map, (int, int) target)
+  public PerserveranceRover(
+    IGameService gameService,
+    MarsMap map,
+    (int, int) start,
+    (int, int) target,
+    int battery,
+    string orientation
+  )
   {
     this.gameService = gameService;
     Map = map;
+    CurrentLocation = start;
+    StartingLocation = start;
     Target = target;
+    Battery = battery;
+    Orientation = Orientation;
   }
 
   public void CalculateDetailedPath()
@@ -47,6 +65,8 @@ public class PerserveranceRover
           Map.TopRight
         );
       }
+      if (StartingPathCost == 0)
+        StartingPathCost = Map.CalculatePathCost(Path);
     }
     pathTimer.Stop();
     int elapsedMs = (int)pathTimer.ElapsedMilliseconds;
@@ -71,6 +91,7 @@ public class PerserveranceRover
     if (OnPathUpdated != null)
       Task.Run(() => OnPathUpdated());
   }
+
   public async Task<(
     (int, int) start,
     (int, int) end,

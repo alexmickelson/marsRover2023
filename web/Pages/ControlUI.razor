@@ -46,6 +46,7 @@
   {
     await game.PlayGame();
   }
+  public string classStyle = " m-5 ";
 }
 
 <div>
@@ -56,10 +57,13 @@
   <button class="@(Styles.Btn) m-3" @onclick="Go">Follow Path</button>
 
   <div class="flex">
-
+    <div class="@classStyle">Initial Path Cost: @game.Rover.StartingPathCost</div>
+    <div class="@classStyle">History and Remaining Cost: @game.Rover.TotalProjectedCost</div>
+  </div>
+  <div class="flex">
     @if (game.Rover.Path != null)
     {
-      var classStyle = " m-5";
+
       @* <div class="text-sm">Path Length: @game.Path.Count()</div> *@
       <div class="@classStyle">Path Cost: @game.Map.CalculatePathCost(game.Rover.Path)</div>
       <div class="@classStyle">Battery: @game.Rover.Battery</div>

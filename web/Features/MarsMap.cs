@@ -101,7 +101,12 @@ public class MarsMap
 
   public void OptimizeGrid(IEnumerable<(int, int)> path)
   {
-    var newGrid = new ConcurrentDictionary<(int, int), int>();
+    var newGrid =
+      OptimizedGrid == null
+        ? new ConcurrentDictionary<(int, int), int>()
+        : new ConcurrentDictionary<(int, int), int>(OptimizedGrid);
+
+    // var newGrid = new ConcurrentDictionary
     var range = 20;
     foreach (var location in path)
     {
