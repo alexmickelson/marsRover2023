@@ -1,11 +1,11 @@
 using System.Collections.Concurrent;
-using static System.Linq.Enumerable;
 
 public class GamePlayer
 {
   private IGameService gameService;
   public MarsMap? Map { get; set; } = null;
   public PerserveranceRover Rover { get; private set; }
+  public IngenuityCopter Copter { get; set; }
 
   public GamePlayer(IGameService gameService)
   {
@@ -33,6 +33,12 @@ public class GamePlayer
       orientation: response.Orientation
     );
 
+    Copter = new IngenuityCopter(
+      gameService: gameService,
+      map: Map,
+      start: start
+    );
+
     System.Console.WriteLine("Registered for game");
   }
 
@@ -53,5 +59,28 @@ public class GamePlayer
         Rover.OptimizeGrid();
       }
     }
+  }
+
+  public async Task PlayCopter()
+  {
+    var t = new Thread(async () =>
+    {
+      while (true)
+      {
+        while (Copter.Location != Rover.Target)
+        {
+          // await Copter.TakeStepToTarget(Rover.Target);
+          await Copter.FollowPath(Rover.Path, Rover.CurrentLocation);
+          Thread.Sleep(150);
+        }
+
+        while (Copter.Location != Rover.CurrentLocation)
+        {
+          await Copter.TakeStepToTarget(Rover.CurrentLocation);
+          Thread.Sleep(100);
+        }
+      }
+    });
+    t.Start();
   }
 }

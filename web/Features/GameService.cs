@@ -18,7 +18,7 @@ public interface IGameService
 
   Task<JoinResponse> JoinGame(string name = "Test_Alex");
   Task<MoveResponse> Move(Direction direction);
-  Task<MoveResponse> MoveInenuity(int row, int col);
+  Task<MoveResponse> MoveIngenuity(int row, int col);
 }
 
 public class GameService : IGameService
@@ -57,6 +57,12 @@ public class GameService : IGameService
   {
     var joinUrl = $"/game/moveperseverance?token={Token}&direction={direction}";
     var request = new RestRequest(joinUrl);
+    var data = await makeMoveRequest(request);
+    return data;
+  }
+
+  private async Task<MoveResponse> makeMoveRequest(RestRequest request)
+  {
     var response = await client.ExecuteGetAsync<MoveResponse>(request);
 
     while (gameNotStarted(response))
@@ -86,9 +92,10 @@ public class GameService : IGameService
     {
       System.Console.WriteLine(JsonSerializer.Serialize(response));
       System.Console.WriteLine(response.Content);
+      System.Console.WriteLine(response.ResponseUri);
       System.Console.WriteLine(response.StatusCode);
       System.Console.WriteLine(response.Data?.Message);
-      throw new Exception("Could not move perserverance, got null response");
+      throw new Exception("Could not move, got null response");
     }
   }
 
@@ -111,8 +118,8 @@ public class GameService : IGameService
 
       Thread.Sleep(sleepTime);
       response = await client.ExecuteGetAsync<MoveResponse>(request);
-      handleBadMoveResponse(response);
     }
+    handleBadMoveResponse(response);
 
     return response;
   }
@@ -129,21 +136,13 @@ public class GameService : IGameService
     return response.StatusCode == System.Net.HttpStatusCode.TooManyRequests;
   }
 
-  public async Task<MoveResponse> MoveInenuity(int row, int col)
+  public async Task<MoveResponse> MoveIngenuity(int x, int y)
   {
     var joinUrl =
-      $"/game/moveingenuity?token={Token}&destinationRow={row}&destinationColumn={col}";
+      $"/game/moveingenuity?token={Token}&destinationRow={x}&destinationColumn={y}";
     var request = new RestRequest(joinUrl);
-    var response = await client.ExecuteGetAsync<MoveResponse>(request);
 
-    if (!response.IsSuccessful || response.Data == null)
-    {
-      System.Console.WriteLine(JsonSerializer.Serialize(response));
-      System.Console.WriteLine(response.Content);
-      System.Console.WriteLine(response.StatusCode);
-      System.Console.WriteLine(response.Data?.Message);
-      throw new Exception("Could not move ingenuity, got null response");
-    }
-    return response.Data;
+    var data = await makeMoveRequest(request);
+    return data;
   }
 }

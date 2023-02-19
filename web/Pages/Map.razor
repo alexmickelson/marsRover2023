@@ -50,6 +50,10 @@
     if (!game.Map.Grid.ContainsKey(location))
       return "";
 
+    if (location == game.Copter.Location)
+      return "cell bg-lime-800";
+
+
     if (location == game.Rover.CurrentLocation)
       return "cell bg-lime-600";
 
@@ -77,6 +81,8 @@
     Action refreshFromAnotherThread = () => this.InvokeAsync(this.StateHasChanged);
     game.Rover.OnPositionChanged += refreshFromAnotherThread;
     game.Rover.OnPathUpdated += refreshFromAnotherThread;
+    if (game.Map != null)
+      game.Map.OnMapUpdated += refreshFromAnotherThread;
   }
   public int MyBuffer = 20;
   public (int, int) BottomLeft
@@ -100,8 +106,10 @@
   {
     get
     {
-      var highX = game.Rover.StartingLocation.Item1 > game.Rover.Target.Item1 ? game.Rover.StartingLocation.Item1 : game.Rover.Target.Item1;
-      var highY = game.Rover.StartingLocation.Item2 > game.Rover.Target.Item2 ? game.Rover.StartingLocation.Item2 : game.Rover.Target.Item2;
+      var highX = game.Rover.StartingLocation.Item1 > game.Rover.Target.Item1 ? game.Rover.StartingLocation.Item1 :
+      game.Rover.Target.Item1;
+      var highY = game.Rover.StartingLocation.Item2 > game.Rover.Target.Item2 ? game.Rover.StartingLocation.Item2 :
+      game.Rover.Target.Item2;
       return (highX + MyBuffer, highY + MyBuffer);
     }
   }
@@ -130,7 +138,7 @@
       @foreach (var y in Range(BottomLeft.Item2, TopRight.Item2 - BottomLeft.Item2).Reverse())
       {
         <div class="my-row">
-          @foreach (var x in Range(BottomLeft.Item1 , TopRight.Item1 - BottomLeft.Item1))
+          @foreach (var x in Range(BottomLeft.Item1, TopRight.Item1 - BottomLeft.Item1))
           {
             string myClass = calculateCellClass(x, y);
             <div class=@(myClass)>

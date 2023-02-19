@@ -6,6 +6,7 @@
   {
     Action refreshFromAnotherThread = () => this.InvokeAsync(this.StateHasChanged);
     game.Rover.OnPositionChanged += refreshFromAnotherThread;
+    game.Map.OnMapUpdated += refreshFromAnotherThread;
   }
   public async Task CalculatePath()
   {
@@ -21,27 +22,34 @@
     System.Console.WriteLine("Ended Grid Optimization");
   }
   private bool stepInProgress { get; set; } = false;
-  public async Task TakeStep()
+  public async Task TakeCopterStep()
   {
     stepInProgress = true;
     try
     {
-      System.Console.WriteLine("Started Following Path");
-      await game.Rover.Take1Step();
-      System.Console.WriteLine("Ended Following Path");
+      System.Console.WriteLine("Started Copter Step");
+      System.Console.WriteLine(game.Copter.Location);
+      await game.Copter.TakeStepToTarget(game.Rover.Target);
+      System.Console.WriteLine("Ended Copter Step");
     }
     catch (Exception e)
     {
 
       System.Console.WriteLine(e);
-      System.Console.WriteLine("Error Following Path");
+      System.Console.WriteLine("Error Copter Step");
     }
     finally
     {
       stepInProgress = false;
     }
-    CalculatePath();
   }
+
+  public async Task PlayCopter()
+  {
+    System.Console.WriteLine("Playing copter");
+    await game.PlayCopter();
+  }
+
   public async Task Go()
   {
     System.Console.WriteLine("Starting to play game");
@@ -54,12 +62,14 @@
 
   <button class="@(Styles.Btn) m-3" @onclick="OptimiseGrid">Optimize Grid</button>
   <button class="@(Styles.Btn) m-3" @onclick="CalculatePath">Calculate Path</button>
-  <button class="@(Styles.Btn) m-3" @onclick="TakeStep" disabled="@stepInProgress">Take Step</button>
+  <button class="@(Styles.Btn) m-3" @onclick="TakeCopterStep" disabled="@stepInProgress">Take Copter Step</button>
+  <button class="@(Styles.Btn) m-3" @onclick="PlayCopter">Play Copter</button>
   <button class="@(Styles.Btn) m-3" @onclick="Go">Follow Path</button>
 
   <div class="flex">
     <div class="@classStyle">Initial Path Cost: @game.Rover.StartingPathCost</div>
     <div class="@classStyle">History and Remaining Cost: @game.Rover.TotalProjectedCost</div>
+    <div class="@classStyle">Copter Battery: @game.Copter.Battery</div>
   </div>
   <div class="flex">
     @if (game.Rover.Path != null)

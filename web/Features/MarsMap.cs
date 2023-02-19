@@ -7,6 +7,7 @@ public class MarsMap
   public ConcurrentDictionary<(int, int), int> OptimizedGrid { get; set; }
   public ConcurrentDictionary<(int, int), int> LowResGrid { get; private set; }
   public IEnumerable<LowResolutionMap> LowResolutionMaps { get; private set; }
+  public event Action OnMapUpdated;
   public int LowResScaleFactor { get; set; }
   public (int, int) TopRight { get; set; } = (0, 0);
 
@@ -58,6 +59,8 @@ public class MarsMap
       if (OptimizedGrid != null)
         OptimizedGrid[(neighbor.X, neighbor.Y)] = neighbor.Difficulty;
     }
+    if (OnMapUpdated != null)
+      Task.Run(() => OnMapUpdated());
   }
 
   private (ConcurrentDictionary<(int, int), int>, (int, int)) createEmptyGrid(
@@ -117,7 +120,7 @@ public class MarsMap
 
       foreach (var neighbor in neighbors)
       {
-        if (PointInGrid(neighbor))
+        if (LocationIsInGrid(neighbor))
         {
           if (Grid.ContainsKey(neighbor))
             newGrid[neighbor] = Grid[neighbor];
@@ -129,7 +132,7 @@ public class MarsMap
     OptimizedGrid = newGrid;
   }
 
-  public bool PointInGrid((int, int) l)
+  public bool LocationIsInGrid((int, int) l)
   {
     return l.Item1 >= 0
       && l.Item1 <= TopRight.Item1
