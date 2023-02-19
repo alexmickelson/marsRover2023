@@ -46,7 +46,7 @@ public class Helpers
     var game = new GamePlayer(mockService);
 
     await game.Register("testGame");
-    game.CalculateDetailedPath();
+    game.Rover.CalculateDetailedPath();
     return game;
   }
 

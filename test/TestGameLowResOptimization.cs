@@ -47,7 +47,7 @@ public class TestGameLowResOptimization
       lowResMap
     );
 
-    game.OptimizeGrid();
+    game.Rover.OptimizeGrid();
     game.Map.OptimizedGrid.Count().Should().Be(25);
   }
 }

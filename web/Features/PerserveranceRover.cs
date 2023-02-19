@@ -1,71 +1,24 @@
-using System.Collections.Concurrent;
-using static System.Linq.Enumerable;
-
-public class GamePlayer
+public class PerserveranceRover
 {
   private IGameService gameService;
-  public event Action OnPositionChanged;
-  public event Action OnPathUpdated;
-  public MarsMap? Map { get; set; } = null;
-  public IEnumerable<(int, int)> Path { get; set; } = new (int, int)[] { };
+  public (int, int) CurrentLocation { get; set; } = default;
+  public (int, int) StartingLocation { get; set; } = default;
   public int LastPathCalulationTime { get; private set; }
   public int LastGridOptimizationTime { get; private set; }
-  public List<(int, int)> History { get; set; } = new();
-  public (int, int) CurrentLocation { get; private set; } = default;
-  public (int, int) StartingLocation { get; private set; } = default;
-  public (int, int) Target { get; private set; } = default;
-  public (int, int) LowResCurrentLocation { get; private set; } = default;
-  public (int, int) LowResTarget { get; private set; } = default;
-  public int Battery { get; set; }
   public string Orientation { get; set; }
+  public int Battery { get; set; }
+  public MarsMap? Map { get; set; } = null;
+  public List<(int, int)> History { get; set; } = new();
+  public event Action OnPositionChanged;
+  public event Action OnPathUpdated;
+  public IEnumerable<(int, int)> Path { get; set; } = new (int, int)[] { };
+  public (int, int) Target { get; private set; } = default;
 
-  public GamePlayer(IGameService gameService)
+  public PerserveranceRover(IGameService gameService, MarsMap map, (int, int) target)
   {
     this.gameService = gameService;
-  }
-
-  public async Task Register(string gameId, string name = "Test_Alex")
-  {
-    System.Console.WriteLine("Registering");
-    gameService.GameId = gameId;
-    var response = await gameService.JoinGame(name);
-    Battery = 2000;
-    Orientation = response.Orientation;
-
-    Map = new MarsMap(response.LowResolutionMap, response.Neighbors);
-
-    CurrentLocation = (response.StartingX, response.StartingY);
-    StartingLocation = CurrentLocation;
-    Target = (response.TargetX, response.TargetY);
-
-    LowResCurrentLocation = (
-      response.StartingX / Map.LowResScaleFactor,
-      response.StartingY / Map.LowResScaleFactor
-    );
-    LowResTarget = (
-      response.TargetX / Map.LowResScaleFactor,
-      response.TargetY / Map.LowResScaleFactor
-    );
-
-    System.Console.WriteLine("Registered for game");
-  }
-
-  public async Task PlayGame()
-  {
-    CalculateDetailedPath();
-    OptimizeGrid();
-    while (true)
-    {
-      var (start, end, cost, time) = await Take1Step();
-      System.Console.WriteLine(
-        $"{start} -> {end}, cost: {cost}, time: {time} ms"
-      );
-      if (!Map.IsAnEdge(CurrentLocation))
-      {
-        CalculateDetailedPath();
-        OptimizeGrid();
-      }
-    }
+    Map = map;
+    Target = target;
   }
 
   public void CalculateDetailedPath()
@@ -118,7 +71,6 @@ public class GamePlayer
     if (OnPathUpdated != null)
       Task.Run(() => OnPathUpdated());
   }
-
   public async Task<(
     (int, int) start,
     (int, int) end,

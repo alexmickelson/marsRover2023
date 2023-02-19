@@ -50,7 +50,7 @@
     if (!game.Map.Grid.ContainsKey(location))
       return "";
 
-    if (location == game.CurrentLocation)
+    if (location == game.Rover.CurrentLocation)
       return "cell bg-lime-600";
 
     if (location == game.Target)
@@ -59,9 +59,9 @@
     if (game.Map.OptimizedGrid != null && !game.Map.OptimizedGrid.ContainsKey(location))
       return "cell bg-black";
 
-    if (game.Path != null && game.Path.Contains(location))
+    if (game.Rover.Path != null && game.Rover.Path.Contains(location))
       return "cell bg-rose-900";
-    if (game.History.Contains(location))
+    if (game.Rover.History.Contains(location))
       return "cell bg-slate-500";
 
     var colorKey = game.Map.Grid[location] / 10;
@@ -75,8 +75,8 @@
   protected override void OnInitialized()
   {
     Action refreshFromAnotherThread = () => this.InvokeAsync(this.StateHasChanged);
-    game.OnPositionChanged += refreshFromAnotherThread;
-    game.OnPathUpdated += refreshFromAnotherThread;
+    game.Rover.OnPositionChanged += refreshFromAnotherThread;
+    game.Rover.OnPathUpdated += refreshFromAnotherThread;
   }
   public int MyBuffer = 20;
   public (int, int) BottomLeft
@@ -84,13 +84,13 @@
     get
     {
       var lowX =
-      game.StartingLocation.Item1 < game.Target.Item1
-      ? game.StartingLocation.Item1
+      game.Rover.StartingLocation.Item1 < game.Target.Item1
+      ? game.Rover.StartingLocation.Item1
       : game.Target.Item1;
 
       var lowY =
-      game.StartingLocation.Item2 < game.Target.Item2
-      ? game.StartingLocation.Item2
+      game.Rover.StartingLocation.Item2 < game.Target.Item2
+      ? game.Rover.StartingLocation.Item2
       : game.Target.Item2;
 
       return (lowX - MyBuffer, lowY - MyBuffer);
@@ -100,8 +100,8 @@
   {
     get
     {
-      var highX = game.StartingLocation.Item1 > game.Target.Item1 ? game.StartingLocation.Item1 : game.Target.Item1;
-      var highY = game.StartingLocation.Item2 > game.Target.Item2 ? game.StartingLocation.Item2 : game.Target.Item2;
+      var highX = game.Rover.StartingLocation.Item1 > game.Target.Item1 ? game.Rover.StartingLocation.Item1 : game.Target.Item1;
+      var highY = game.Rover.StartingLocation.Item2 > game.Target.Item2 ? game.Rover.StartingLocation.Item2 : game.Target.Item2;
       return (highX + MyBuffer, highY + MyBuffer);
     }
   }

@@ -9,9 +9,9 @@ public class GameTests
       (1, 1)
     );
 
-    game.Path.Should().NotBeNull();
-    game.Path.Should().NotBeEmpty();
-    game.Path.ElementAt(1).Should().Be((1, 0));
+    game.Rover.Path.Should().NotBeNull();
+    game.Rover.Path.Should().NotBeEmpty();
+    game.Rover.Path.ElementAt(1).Should().Be((0, 1));
   }
 
   [Test]
@@ -22,7 +22,7 @@ public class GameTests
       (0, 0),
       (1, 1)
     );
-    game.Path.ElementAt(1).Should().Be((0, 1));
+    game.Rover.Path.ElementAt(1).Should().Be((1, 0));
   }
 
   [Test]
@@ -33,7 +33,7 @@ public class GameTests
       (0, 1),
       (1, 1)
     );
-    game.Path.ElementAt(1).Should().Be((1, 1));
+    game.Rover.Path.ElementAt(1).Should().Be((1, 1));
   }
 
   [Test]
@@ -53,7 +53,7 @@ public class GameTests
     );
 
     var expectedPath = new (int, int)[] { (0, 0), (0, 1), (0, 2) };
-    game.Path.Should().BeEquivalentTo(expectedPath);
+    game.Rover.Path.Should().BeEquivalentTo(expectedPath);
   }
 
   [Test]
@@ -73,7 +73,7 @@ public class GameTests
     );
 
     var expectedPath = new (int, int)[] { (0, 0), (0, 1), (0, 2) };
-    CollectionAssert.AreEquivalent(expectedPath, game.Path);
+    CollectionAssert.AreEquivalent(expectedPath, game.Rover.Path);
   }
 
   [Test]
@@ -100,7 +100,7 @@ public class GameTests
       (1, 2),
       (0, 2)
     };
-    CollectionAssert.AreEquivalent(expectedPath, game.Path);
+    CollectionAssert.AreEquivalent(expectedPath, game.Rover.Path);
   }
 
 

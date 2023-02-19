@@ -5,19 +5,19 @@
   protected override void OnInitialized()
   {
     Action refreshFromAnotherThread = () => this.InvokeAsync(this.StateHasChanged);
-    game.OnPositionChanged += refreshFromAnotherThread;
+    game.Rover.OnPositionChanged += refreshFromAnotherThread;
   }
   public async Task CalculatePath()
   {
     System.Console.WriteLine("Started Path Calculation");
-    game.CalculateDetailedPath();
+    game.Rover.CalculateDetailedPath();
     System.Console.WriteLine("Ended Path Calculation");
   }
 
   public void OptimiseGrid()
   {
     System.Console.WriteLine("Started Grid Optimization");
-    game.OptimizeGrid();
+    game.Rover.OptimizeGrid();
     System.Console.WriteLine("Ended Grid Optimization");
   }
   private bool stepInProgress { get; set; } = false;
@@ -27,7 +27,7 @@
     try
     {
       System.Console.WriteLine("Started Following Path");
-      await game.Take1Step();
+      await game.Rover.Take1Step();
       System.Console.WriteLine("Ended Following Path");
     }
     catch (Exception e)
@@ -57,14 +57,14 @@
 
   <div class="flex">
 
-    @if (game.Path != null)
+    @if (game.Rover.Path != null)
     {
       var classStyle = " m-5";
       @* <div class="text-sm">Path Length: @game.Path.Count()</div> *@
-      <div class="@classStyle">Path Cost: @game.Map.CalculatePathCost(game.Path)</div>
-      <div class="@classStyle">Battery: @game.Battery</div>
-      <div class="@classStyle">Path Calulation Time: @game.LastPathCalulationTime ms</div>
-      <div class="@classStyle">Grid Optmization Time: @game.LastGridOptimizationTime ms</div>
+      <div class="@classStyle">Path Cost: @game.Map.CalculatePathCost(game.Rover.Path)</div>
+      <div class="@classStyle">Battery: @game.Rover.Battery</div>
+      <div class="@classStyle">Path Calulation Time: @game.Rover.LastPathCalulationTime ms</div>
+      <div class="@classStyle">Grid Optmization Time: @game.Rover.LastGridOptimizationTime ms</div>
     }
   </div>
 </div>
