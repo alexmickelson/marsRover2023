@@ -39,7 +39,7 @@ public class PerserveranceRover
     Orientation = Orientation;
   }
 
-  public void CalculateDetailedPath()
+  public void CalculateDetailedPath(bool optimize = false)
   {
     if (Map == null)
       throw new NullReferenceException("map cannot be null in detailed path");
@@ -53,7 +53,9 @@ public class PerserveranceRover
           Map.OptimizedGrid,
           CurrentLocation,
           Target,
-          Map.TopRight
+          Map.TopRight,
+          History,
+          optimize
         );
       }
       else
@@ -62,7 +64,9 @@ public class PerserveranceRover
           Map.Grid,
           CurrentLocation,
           Target,
-          Map.TopRight
+          Map.TopRight,
+          History,
+          optimize
         );
       }
       if (StartingPathCost == 0)
@@ -78,8 +82,8 @@ public class PerserveranceRover
 
   public void OptimizeGrid()
   {
-    if (Path == null)
-      CalculateDetailedPath();
+    if (Path.Count() == 0)
+      CalculateDetailedPath(optimize: true);
 
     var gridOptimizationTimer = System.Diagnostics.Stopwatch.StartNew();
     gridOptimizationTimer.Start();
@@ -102,6 +106,9 @@ public class PerserveranceRover
     var moveTimer = System.Diagnostics.Stopwatch.StartNew();
     var startingBattery = Battery;
     var startinglocation = CurrentLocation;
+
+    if (Path.Count() == 0)
+      throw new Exception("Cannot take step if path is empty");
 
     while (Path.First() == CurrentLocation)
       Path = Path.Skip(1);

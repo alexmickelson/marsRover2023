@@ -2,46 +2,24 @@ using System.Collections.Concurrent;
 
 public class MapPath
 {
-  public static int costMultiplier = 10;
-  public static List<(int, int)> GetNeighbors(
-    (int, int) location,
-    (int, int) target,
-    (int, int) topRight
-  )
-  {
-    var neighbors = new List<(int, int)>();
-
-    bool canGoDown = location.Item1 >= target.Item1 && location.Item1 > 0;
-    bool canGoUp =
-      location.Item1 <= target.Item1 && location.Item1 < topRight.Item1;
-    bool canGoLeft = location.Item2 >= target.Item2 && location.Item2 > 0;
-    bool canGoRight =
-      location.Item2 <= target.Item2 && location.Item2 < topRight.Item2;
-
-    if (canGoDown)
-      neighbors.Add((location.Item1 - 1, location.Item2));
-    if (canGoLeft)
-      neighbors.Add((location.Item1, location.Item2 - 1));
-
-    if (canGoUp)
-      neighbors.Add((location.Item1 + 1, location.Item2));
-    if (canGoRight)
-      neighbors.Add((location.Item1, location.Item2 + 1));
-
-    return neighbors;
-  }
+  public static int furtherAwayMultiplier = 3;
+  public static int furtherAwayOffset = 70;
+  public static int backtrackMultiplier = 1;
+  public static int backtrackOffset = 20;
 
   public static IEnumerable<(int, int)> CalculatePath(
     ConcurrentDictionary<(int, int), int> grid,
     (int, int) currentLocation,
     (int, int) target,
-    (int, int) topRight
+    (int, int) topRight,
+    IEnumerable<(int, int)> roverHistory,
+    bool optimize = true
   )
   {
     var (currentCheckLocation, locationPaths) =
       initializeBreadthFirstDataStructures(currentLocation);
-    var locationsToProcess = new List<PathHistory>();
 
+    var nextLocationsToCheck = new List<PathHistory>();
     var visited = new List<(int, int)>();
 
     while (currentCheckLocation != target)
@@ -52,10 +30,12 @@ public class MapPath
         target,
         topRight,
         locationPaths,
-        locationsToProcess
+        nextLocationsToCheck,
+        roverHistory,
+        optimize
       );
-      (var historyEntry, locationsToProcess) = getAndRemoveSmallestLocation(
-        locationsToProcess
+      (var historyEntry, nextLocationsToCheck) = getAndRemoveSmallestLocation(
+        nextLocationsToCheck
       );
 
       // System.Console.WriteLine(historyEntry);
@@ -118,14 +98,15 @@ public class MapPath
     (int, int) target,
     (int, int) topRight,
     Dictionary<(int, int), PathHistory> locationPaths,
-    List<PathHistory> locationsToCheck
+    List<PathHistory> locationsToCheck,
+    IEnumerable<(int, int)> roverHistory,
+    bool optimize
   )
   {
-    List<(int, int)> neighbors = GetNeighbors(
-      currentCheckLocation,
-      target,
-      topRight
-    );
+    // optimize = false;
+    List<(int, int)> neighbors = optimize
+      ? GetNeighborsOptimized(currentCheckLocation, target, topRight)
+      : GetNeighbors(currentCheckLocation, target, topRight);
 
     var orderedNeighbors = neighbors
       .Where(
@@ -137,11 +118,110 @@ public class MapPath
       .OrderBy((l) => grid[l]);
 
     var currentCost = grid[currentCheckLocation];
+
+    var distanceToTarget =
+      Math.Abs(currentCheckLocation.Item1 - target.Item1)
+      + Math.Abs(currentCheckLocation.Item2 - target.Item2);
+
+    var random = new Random();
     foreach (var n in orderedNeighbors)
     {
-      var nextCost = (costMultiplier * grid[n]) + currentCost;
+      var nextDistanceToTarget =
+        Math.Abs(n.Item1 - target.Item1) + Math.Abs(n.Item2 - target.Item2);
+      var furtherAway = nextDistanceToTarget > distanceToTarget;
+
+
+      var smudgeAmount = (random.Next(3) / 10.0) + 0.9;
+      int smudgedCost = (int)(smudgeAmount * grid[n]);
+
+      int distanceAdjustedStepCost = furtherAway
+        ? (int)(furtherAwayMultiplier * smudgedCost) + furtherAwayOffset
+        : (int)(smudgedCost * 2);
+
+      bool isBacktracking = roverHistory.Contains(n);
+      if (isBacktracking)
+        distanceAdjustedStepCost =
+          (int)(distanceAdjustedStepCost * backtrackMultiplier)
+          + backtrackOffset;
+
+      var nextCost = distanceAdjustedStepCost + currentCost;
       var historyEntry = new PathHistory(nextCost, n, currentCheckLocation);
       locationsToCheck.Add(historyEntry);
     }
+  }
+
+  public static List<(int, int)> GetNeighbors(
+    (int, int) location,
+    (int, int) target,
+    (int, int) topRight
+  )
+  {
+    // var allowBacktracking = false;
+
+    var neighbors = new List<(int, int)>();
+
+    var xDistance = Math.Abs(location.Item1 - target.Item1);
+    var yDistance = Math.Abs(location.Item2 - target.Item2);
+    var xAxisLonger = xDistance > yDistance;
+
+    bool xDecreaseIsTowardsTarget = location.Item1 >= target.Item1;
+    bool xIncreaseIsTowardsTarget = location.Item1 <= target.Item1;
+
+    bool yDecreaseIsTowardsTarget = location.Item2 >= target.Item2;
+    bool yIncreaseIsTowardsTarget = location.Item2 <= target.Item2;
+
+    bool xDecreaseInBounds = location.Item1 > 0;
+    bool xIncreaseInBounds = location.Item1 < topRight.Item1;
+    bool yDecreaseInBounds = location.Item2 > 0;
+    bool yIncreaseInBounds = location.Item2 < topRight.Item2;
+
+    // if (xDecreaseInBounds)
+    //   neighbors.Add((location.Item1 - 1, location.Item2));
+    // if (yDecreaseInBounds)
+    //   neighbors.Add((location.Item1, location.Item2 - 1));
+
+    // if (xIncreaseInBounds)
+    //   neighbors.Add((location.Item1 + 1, location.Item2));
+    // if (yIncreaseInBounds)
+    //   neighbors.Add((location.Item1, location.Item2 + 1));
+    if (xDecreaseInBounds && (!xAxisLonger || xDecreaseIsTowardsTarget))
+      neighbors.Add((location.Item1 - 1, location.Item2));
+    if (yDecreaseInBounds && (xAxisLonger || yDecreaseIsTowardsTarget))
+      neighbors.Add((location.Item1, location.Item2 - 1));
+
+    if (xIncreaseInBounds && (!xAxisLonger || xIncreaseIsTowardsTarget))
+      neighbors.Add((location.Item1 + 1, location.Item2));
+    if (yIncreaseInBounds && (xAxisLonger || yIncreaseIsTowardsTarget))
+      neighbors.Add((location.Item1, location.Item2 + 1));
+
+    return neighbors;
+  }
+
+  public static List<(int, int)> GetNeighborsOptimized(
+    (int, int) location,
+    (int, int) target,
+    (int, int) topRight
+  )
+  {
+    var neighbors = new List<(int, int)>();
+
+    bool canDecreaseX = location.Item1 >= target.Item1 && location.Item1 > 0;
+    bool canIncreaseX =
+      location.Item1 <= target.Item1 && location.Item1 < topRight.Item1;
+    bool canDecreaseY = location.Item2 >= target.Item2 && location.Item2 > 0;
+    bool canIncreaseY =
+      location.Item2 <= target.Item2 && location.Item2 < topRight.Item2;
+
+    if (canDecreaseX)
+      neighbors.Add((location.Item1 - 1, location.Item2));
+    if (canDecreaseY)
+      neighbors.Add((location.Item1, location.Item2 - 1));
+
+    if (canIncreaseX)
+      neighbors.Add((location.Item1 + 1, location.Item2));
+    if (canIncreaseY)
+      neighbors.Add((location.Item1, location.Item2 + 1));
+
+    return neighbors;
   }
 }

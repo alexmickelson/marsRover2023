@@ -38,8 +38,9 @@ public class GamePlayer
 
   public async Task PlayGame()
   {
-    Rover.CalculateDetailedPath();
     Rover.OptimizeGrid();
+    if (Rover.Path.Count() == 0)
+      throw new Exception("Cannot play game if path is empty");
     while (true)
     {
       var (start, end, cost, time) = await Rover.Take1Step();
