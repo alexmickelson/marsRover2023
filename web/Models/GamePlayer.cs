@@ -9,14 +9,13 @@ public class GamePlayer
   public MarsMap? Map { get; set; } = null;
   public IEnumerable<(int, int)> Path { get; set; } = new (int, int)[] { };
   public int LastPathCalulationTime { get; private set; }
+  public int LastGridOptimizationTime { get; private set; }
   public List<(int, int)> History { get; set; } = new();
   public (int, int) CurrentLocation { get; private set; } = default;
   public (int, int) StartingLocation { get; private set; } = default;
   public (int, int) Target { get; private set; } = default;
   public (int, int) LowResCurrentLocation { get; private set; } = default;
   public (int, int) LowResTarget { get; private set; } = default;
-
-  // public IEnumerable<(int, int)> LowResPath { get; set; }
   public int Battery { get; set; }
   public string Orientation { get; set; }
 
@@ -54,14 +53,18 @@ public class GamePlayer
   public async Task PlayGame()
   {
     CalculateDetailedPath();
+    OptimizeGrid();
     while (true)
     {
       var (start, end, cost, time) = await Take1Step();
       System.Console.WriteLine(
         $"{start} -> {end}, cost: {cost}, time: {time} ms"
       );
-
-      CalculateDetailedPath();
+      if (!Map.IsAnEdge(CurrentLocation))
+      {
+        CalculateDetailedPath();
+        OptimizeGrid();
+      }
     }
   }
 
@@ -100,71 +103,20 @@ public class GamePlayer
       Task.Run(() => OnPathUpdated());
   }
 
-  // public void CalculateLowResPath()
-  // {
-  //   if (Map == null)
-  //     throw new NullReferenceException("map cannot be null in detailed path");
-
-  //   LowResPath = MapPath.CalculatePath(
-  //     Map.LowResGrid,
-  //     LowResCurrentLocation,
-  //     LowResTarget,
-  //     Map.LowResTopRight
-  //   );
-  // }
-
   public void OptimizeGrid()
   {
-    CalculateDetailedPath();
+    if (Path == null)
+      CalculateDetailedPath();
 
-    var newGrid = new ConcurrentDictionary<(int, int), int>();
+    var gridOptimizationTimer = System.Diagnostics.Stopwatch.StartNew();
+    gridOptimizationTimer.Start();
+    Map.OptimizeGrid(Path);
 
-    System.Console.WriteLine(Path.Count());
+    gridOptimizationTimer.Stop();
+    LastGridOptimizationTime = (int)gridOptimizationTimer.ElapsedMilliseconds;
 
-    foreach (var location in Path)
-    {
-      var neighbors = Range(location.Item1 - 10, 20)
-        .SelectMany((x) => Range(location.Item2 - 10, 20).Select(y => (x, y)));
-
-      // neighbors.ToList().ForEach(p => System.Console.WriteLine(p));
-
-      foreach (var neighbor in neighbors)
-      {
-        if (pointCloseToTarget(neighbor) || PointInGrid(neighbor))
-        {
-          if (Map.Grid.ContainsKey(neighbor))
-            newGrid[neighbor] = Map.Grid[neighbor];
-          else
-            newGrid[neighbor] = Map.LowResGrid[neighbor];
-        }
-      }
-    }
-
-    // Map.Grid.Keys
-    //   .Where((l) => pointCloseToTarget(l) || pointCloseToPath(l))
-    //   .ToList()
-    //   .ForEach(k =>
-    //   {
-    //     if (!newGrid.ContainsKey(k))
-    //       newGrid[k] = Map.Grid[k];
-    //   });
-
-    Map.OptimizedGrid = newGrid;
-  }
-
-  private bool pointCloseToTarget((int, int) l)
-  {
-    var range = 30;
-    return (Math.Abs(Target.Item1 - l.Item1) < range)
-      && (Math.Abs(Target.Item2 - l.Item2) < range);
-  }
-
-  public bool PointInGrid((int, int) l)
-  {
-    return l.Item1 >= 0
-      && l.Item1 <= Map.TopRight.Item1
-      && l.Item2 >= 0
-      && l.Item2 <= Map.TopRight.Item2;
+    if (OnPathUpdated != null)
+      Task.Run(() => OnPathUpdated());
   }
 
   public async Task<(

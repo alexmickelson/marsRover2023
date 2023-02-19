@@ -77,9 +77,6 @@ public class MarsMap
 
   private void setLowResMapValues(IEnumerable<LowResolutionMap> lowResMap)
   {
-    var xCount = lowResMap.Max(l => l.UpperRightX);
-    var yCount = lowResMap.Max(l => l.UpperRightY);
-
     foreach (var cell in lowResMap)
     {
       var xRangeCount = cell.UpperRightX - cell.LowerLeftX + 1;
@@ -88,9 +85,50 @@ public class MarsMap
       foreach (var x in Range(cell.LowerLeftX, xRangeCount))
         foreach (var y in Range(cell.LowerLeftY, yRangeCount))
         {
-          if (x != 0 && x != xCount && y != 0 && y != yCount)
+          if (!IsAnEdge((x, y)))
             Grid[(x, y)] = cell.AverageDifficulty;
         }
     }
+  }
+
+  public bool IsAnEdge((int, int) location)
+  {
+    return location.Item1 == 0
+      || location.Item1 == TopRight.Item1
+      || location.Item2 == 0
+      || location.Item2 == TopRight.Item2;
+  }
+
+  public void OptimizeGrid(IEnumerable<(int, int)> path)
+  {
+    var newGrid = new ConcurrentDictionary<(int, int), int>();
+    var range = 20;
+    foreach (var location in path)
+    {
+      var neighbors = Range(location.Item1 - range / 2, range)
+        .SelectMany(
+          (x) => Range(location.Item2 - range / 2, range).Select(y => (x, y))
+        );
+
+      foreach (var neighbor in neighbors)
+      {
+        if (PointInGrid(neighbor))
+        {
+          if (Grid.ContainsKey(neighbor))
+            newGrid[neighbor] = Grid[neighbor];
+          else
+            newGrid[neighbor] = LowResGrid[neighbor];
+        }
+      }
+    }
+    OptimizedGrid = newGrid;
+  }
+
+  public bool PointInGrid((int, int) l)
+  {
+    return l.Item1 >= 0
+      && l.Item1 <= TopRight.Item1
+      && l.Item2 >= 0
+      && l.Item2 <= TopRight.Item2;
   }
 }

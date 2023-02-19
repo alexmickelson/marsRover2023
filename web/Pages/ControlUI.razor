@@ -50,22 +50,21 @@
 
 <div>
 
-  <button class="@(Styles.Btn) m-3" @onclick="OptimiseGrid">Optimise Grid</button>
+  <button class="@(Styles.Btn) m-3" @onclick="OptimiseGrid">Optimize Grid</button>
   <button class="@(Styles.Btn) m-3" @onclick="CalculatePath">Calculate Path</button>
   <button class="@(Styles.Btn) m-3" @onclick="TakeStep" disabled="@stepInProgress">Take Step</button>
   <button class="@(Styles.Btn) m-3" @onclick="Go">Follow Path</button>
 
-  @if (game.Path != null)
-  {
-    <div class="text-sm">Path Length: @game.Path.Count()</div>
-    <div>Path Cost: @game.Map.CalculatePathCost(game.Path)</div>
-    <div>Battery: @game.Battery</div>
-    <div>Path Calulation Time: @game.LastPathCalulationTime ms</div>
-    @* <div>
-  @foreach (var i in Range(0, 5))
-  {
-  <div>@i: @game.Path.ElementAt(i)</div>
-  }
-  </div> *@
-  }
+  <div class="flex">
+
+    @if (game.Path != null)
+    {
+      var classStyle = " m-5";
+      @* <div class="text-sm">Path Length: @game.Path.Count()</div> *@
+      <div class="@classStyle">Path Cost: @game.Map.CalculatePathCost(game.Path)</div>
+      <div class="@classStyle">Battery: @game.Battery</div>
+      <div class="@classStyle">Path Calulation Time: @game.LastPathCalulationTime ms</div>
+      <div class="@classStyle">Grid Optmization Time: @game.LastGridOptimizationTime ms</div>
+    }
+  </div>
 </div>

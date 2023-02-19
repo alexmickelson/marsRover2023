@@ -47,6 +47,9 @@
   {
     var location = (x, y);
 
+    if (!game.Map.Grid.ContainsKey(location))
+      return "";
+
     if (location == game.CurrentLocation)
       return "cell bg-lime-600";
 
@@ -61,8 +64,6 @@
     if (game.History.Contains(location))
       return "cell bg-slate-500";
 
-    if (!game.Map.Grid.ContainsKey(location))
-      return "";
     var colorKey = game.Map.Grid[location] / 10;
 
     if (Colors.ContainsKey(colorKey))

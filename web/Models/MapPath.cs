@@ -2,8 +2,7 @@ using System.Collections.Concurrent;
 
 public class MapPath
 {
-
-  
+  public static int costMultiplier = 10;
   public static List<(int, int)> GetNeighbors(
     (int, int) location,
     (int, int) target,
@@ -43,7 +42,7 @@ public class MapPath
       initializeBreadthFirstDataStructures(currentLocation);
     var locationsToProcess = new List<PathHistory>();
 
-    var visisted = new List<(int, int)>();
+    var visited = new List<(int, int)>();
 
     while (currentCheckLocation != target)
     {
@@ -140,7 +139,7 @@ public class MapPath
     var currentCost = grid[currentCheckLocation];
     foreach (var n in orderedNeighbors)
     {
-      var nextCost = grid[n] + currentCost;
+      var nextCost = (costMultiplier * grid[n]) + currentCost;
       var historyEntry = new PathHistory(nextCost, n, currentCheckLocation);
       locationsToCheck.Add(historyEntry);
     }
