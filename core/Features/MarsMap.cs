@@ -1,5 +1,6 @@
-using static System.Linq.Enumerable;
+
 using System.Collections.Concurrent;
+using static System.Linq.Enumerable;
 
 public class MarsMap
 {

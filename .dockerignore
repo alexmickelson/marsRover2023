@@ -1,0 +1,11 @@
+__pycache__
+.pytest_cache/
+.env
+htmlcov/
+.mypy_cache
+bin/
+obj/
+.vscode/
+.devcontainer/
+.config/
+docker-compose.yml
