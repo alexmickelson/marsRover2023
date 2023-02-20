@@ -57,27 +57,39 @@ public class GameService : IGameService
   {
     var joinUrl = $"/game/moveperseverance?token={Token}&direction={direction}";
     var request = new RestRequest(joinUrl);
-    var data = await makeMoveRequest(request);
-    return data;
-  }
-
-  private async Task<MoveResponse> makeMoveRequest(RestRequest request)
-  {
     var response = await client.ExecuteGetAsync<MoveResponse>(request);
 
-    while (gameNotStarted(response))
+    if (gameNotStarted(response))
     {
       System.Console.WriteLine("Not ready to play yet");
       Thread.Sleep(100);
-      response = await client.ExecuteGetAsync<MoveResponse>(request);
+      return await Move(direction);
+      // response = await client.ExecuteGetAsync<MoveResponse>(request);
     }
 
-    response = await sleepIfNeeded(request, response);
+    if (isRateLimited(response) || isOutOfBattery(response))
+    {
+      var sleepTime = 1000;
+      if (isRateLimited(response))
+      {
+        System.Console.WriteLine(response.Data);
+        System.Console.WriteLine("Got rate limited, sleeping");
+        sleepTime = 300;
+      }
+      else
+        System.Console.WriteLine("not enough battery, sleeping");
+
+      Thread.Sleep(sleepTime);
+
+      return await Move(direction);
+    }
+
     handleBadMoveResponse(response);
     if (!response.Data.Message.ToLower().Contains(" ok"))
       System.Console.WriteLine(response.Data.Message);
     return response.Data;
   }
+
 
   private static bool gameNotStarted(RestResponse<MoveResponse> response)
   {
@@ -99,30 +111,6 @@ public class GameService : IGameService
     }
   }
 
-  private async Task<RestResponse<MoveResponse>> sleepIfNeeded(
-    RestRequest request,
-    RestResponse<MoveResponse> response
-  )
-  {
-    while (isRateLimited(response) || isOutOfBattery(response))
-    {
-      var sleepTime = 1000;
-      if (isRateLimited(response))
-      {
-        System.Console.WriteLine(response.Data);
-        System.Console.WriteLine("Got rate limited, sleeping");
-        sleepTime = 300;
-      }
-      else
-        System.Console.WriteLine("not enough battery, sleeping");
-
-      Thread.Sleep(sleepTime);
-      response = await client.ExecuteGetAsync<MoveResponse>(request);
-    }
-    handleBadMoveResponse(response);
-
-    return response;
-  }
 
   private static bool isOutOfBattery(RestResponse<MoveResponse> response)
   {
@@ -142,7 +130,36 @@ public class GameService : IGameService
       $"/game/moveingenuity?token={Token}&destinationRow={x}&destinationColumn={y}";
     var request = new RestRequest(joinUrl);
 
-    var data = await makeMoveRequest(request);
-    return data;
+    var response = await client.ExecuteGetAsync<MoveResponse>(request);
+
+    if (gameNotStarted(response))
+    {
+      System.Console.WriteLine("Not ready to play yet");
+      Thread.Sleep(100);
+      return await MoveIngenuity(x, y);
+      // response = await client.ExecuteGetAsync<MoveResponse>(request);
+    }
+
+    if (isRateLimited(response) || isOutOfBattery(response))
+    {
+      var sleepTime = 1000;
+      if (isRateLimited(response))
+      {
+        System.Console.WriteLine(response.Data);
+        System.Console.WriteLine("Got rate limited, sleeping");
+        sleepTime = 300;
+      }
+      else
+        System.Console.WriteLine("not enough battery, sleeping");
+
+      Thread.Sleep(sleepTime);
+
+      return await MoveIngenuity(x, y);
+    }
+
+    handleBadMoveResponse(response);
+    if (!response.Data.Message.ToLower().Contains(" ok"))
+      System.Console.WriteLine(response.Data.Message);
+    return response.Data;
   }
 }
