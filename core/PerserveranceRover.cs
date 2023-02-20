@@ -12,6 +12,7 @@ public class PerserveranceRover
   public int Battery { get; private set; }
   public MarsMap? Map { get; private set; } = null;
   public List<(int x, int y)> History { get; set; } = new();
+  public HashSet<(int x, int y)> AllConsideredPathPoints { get; set; } = new();
   public event Action OnPositionChanged;
   public event Action OnPathUpdated;
   public IEnumerable<(int x, int y)> Path { get; private set; } =
@@ -86,6 +87,12 @@ public class PerserveranceRover
     int elapsedMs = (int)pathTimer.ElapsedMilliseconds;
     LastPathCalulationTime = elapsedMs;
 
+    foreach (var point in Path)
+    {
+      if (!AllConsideredPathPoints.Contains(point))
+        AllConsideredPathPoints.Add(point);
+    }
+
     if (OnPathUpdated != null)
       Task.Run(() => OnPathUpdated());
   }
@@ -97,7 +104,7 @@ public class PerserveranceRover
 
     var gridOptimizationTimer = System.Diagnostics.Stopwatch.StartNew();
     gridOptimizationTimer.Start();
-    Map.OptimizeGrid(Path, reset);
+    Map.OptimizeGrid(AllConsideredPathPoints, reset);
 
     gridOptimizationTimer.Stop();
     LastGridOptimizationTime = (int)gridOptimizationTimer.ElapsedMilliseconds;
@@ -120,16 +127,34 @@ public class PerserveranceRover
     if (Path.Count() == 0)
       throw new Exception("Cannot take step if path is empty");
 
-    while (Path.First() == CurrentLocation)
-      Path = Path.Skip(1);
+    IEnumerable<(int x, int y)> localPath = Path.ToArray();
+    while (localPath.Contains(CurrentLocation))
+      localPath = localPath.Skip(1);
 
-    var nextLocation = Path.First();
+    var nextLocation = localPath.First();
 
     GameMovement.CheckIfTargetTooFar(startinglocation, nextLocation);
-    string desiredOrientation = GameMovement.CalculateOrientation(
-      startinglocation,
-      nextLocation
-    );
+    string desiredOrientation = "";
+    try
+    {
+      desiredOrientation = GameMovement.CalculateOrientation(
+        startinglocation,
+        nextLocation
+      );
+    }
+    catch (Exception e)
+    {
+      if (e.Message.Contains("Error detecting direction"))
+      {
+        System.Console.WriteLine(e.Message);
+        CalculateDetailedPath();
+        return await Take1Step();
+      }
+      else
+      {
+        throw e;
+      }
+    }
     await turnToFaceCorrectDirection(desiredOrientation);
 
     var response = await MoveAndUpdateStatus(Direction.Forward);

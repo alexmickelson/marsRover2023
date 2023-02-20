@@ -88,28 +88,50 @@
   {
     get
     {
-      var lowX =
-      game.Rover.StartingLocation.Item1 < game.Rover.Target.Item1
-      ? game.Rover.StartingLocation.Item1
-      : game.Rover.Target.Item1;
+      if (game.Rover.Path == null)
+      {
+        var lowX =
+        game.Rover.StartingLocation.Item1 < game.Rover.Target.Item1
+        ? game.Rover.StartingLocation.Item1
+        : game.Rover.Target.Item1;
 
-      var lowY =
-      game.Rover.StartingLocation.Item2 < game.Rover.Target.Item2
-      ? game.Rover.StartingLocation.Item2
-      : game.Rover.Target.Item2;
+        var lowY =
+        game.Rover.StartingLocation.Item2 < game.Rover.Target.Item2
+        ? game.Rover.StartingLocation.Item2
+        : game.Rover.Target.Item2;
 
-      return (lowX - MyBuffer, lowY - MyBuffer);
+        return (lowX - MyBuffer, lowY - MyBuffer);
+      }
+      else
+      {
+        var lowX = game.Rover.Path.Min(p => p.x);
+        var lowY = game.Rover.Path.Min(p => p.y);
+
+        return (lowX - MyBuffer, lowY - MyBuffer);
+      }
     }
   }
   public (int, int) TopRight
   {
     get
     {
-      var highX = game.Rover.StartingLocation.Item1 > game.Rover.Target.Item1 ? game.Rover.StartingLocation.Item1 :
-      game.Rover.Target.Item1;
-      var highY = game.Rover.StartingLocation.Item2 > game.Rover.Target.Item2 ? game.Rover.StartingLocation.Item2 :
-      game.Rover.Target.Item2;
-      return (highX + MyBuffer, highY + MyBuffer);
+      if (game.Rover.Path == null)
+      {
+        var highX = game.Rover.StartingLocation.Item1 > game.Rover.Target.Item1
+        ? game.Rover.StartingLocation.Item1 :
+        game.Rover.Target.Item1;
+        var highY = game.Rover.StartingLocation.Item2 > game.Rover.Target.Item2
+        ? game.Rover.StartingLocation.Item2 :
+        game.Rover.Target.Item2;
+
+        return (highX + MyBuffer, highY + MyBuffer);
+      }
+      else
+      {
+        var highX = game.Rover.Path.Max(p => p.x);
+        var highY = game.Rover.Path.Max(p => p.y);
+        return (highX + MyBuffer, highY + MyBuffer);
+      }
     }
   }
 }

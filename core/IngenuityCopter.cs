@@ -27,44 +27,16 @@ public class IngenuityCopter
 
     var bestNeigbor = validNeighbors.MinBy(l => DistanceToTarget(target, l));
 
-    await moveAndUpdateStatus(target, bestNeigbor);
+    await moveAndUpdateStatus(bestNeigbor);
   }
 
-  public async Task FollowManyPaths(
-    IEnumerable<IEnumerable<(int x, int y)>> paths
-  )
-  {
-    foreach (var path in paths)
-    {
-      var startIsClosest =
-        DistanceToTarget(path.First(), Location)
-        < DistanceToTarget(path.Last(), Location);
-
-      var startOfPath = startIsClosest ? path.First() : path.Last();
-
-      while (startOfPath != Location)
-      {
-        await TakeStepToTarget(startOfPath);
-      }
-
-      var bestPath = startIsClosest ? path : path.Reverse();
-      var target = path.Last();
-      while (Location != target)
-      {
-        await TakeBestStepOnPath(path);
-      }
-    }
-  }
 
 
   public async Task TakeBestStepOnPath(IEnumerable<(int x, int y)> path)
   {
     IEnumerable<(int x, int y)> validNeighbors = getValidNeighborsInRange();
 
-    var bestNeigbor = path.Reverse()
-      .FirstOrDefault(l => validNeighbors.Contains(l));
-
-    var closestPath = path.Reverse()
+    var closestPath = path.Where(p => p != Location).Reverse()
       .MinBy(l => validNeighbors.Min(n => DistanceToTarget(l, n)));
 
     var lastStepInRange = validNeighbors.Contains(path.Last());
@@ -74,7 +46,6 @@ public class IngenuityCopter
   }
 
   private async Task moveAndUpdateStatus(
-    (int x, int y) target,
     (int x, int y) bestNeigbor
   )
   {
@@ -89,7 +60,6 @@ public class IngenuityCopter
     Location = (response.X, response.Y);
     Battery = response.BatteryLevel;
 
-    
     Map.CopterUpdateGridWithNeighbors(response.Neighbors);
   }
 

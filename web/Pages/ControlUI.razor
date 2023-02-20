@@ -18,14 +18,14 @@
   public void PlayCopter()
   {
     System.Console.WriteLine("Playing copter");
-    var t = game.PlayCopter();
+    game.PlayCopter();
   }
 
   public void Go()
   {
     System.Console.WriteLine("Starting to play game");
-    var t = game.PlayRover();
-    t.Join();
+    game.PlayRover();
+
   }
 
   public async Task PlayGame()
@@ -33,6 +33,17 @@
     await Task.Run(() =>
       game.PlayGame()
     );
+  }
+
+  public void ActivateTurbo() 
+  {
+    System.Console.WriteLine("activated turbo");
+    game.Turbo = true;
+  }
+  public void DeactivateTurbo() 
+  {
+    System.Console.WriteLine("stopping turbo");
+    game.Turbo = true;
   }
   public string classStyle = " m-5 ";
 }
@@ -42,7 +53,9 @@
   <button class="@(Styles.Btn) m-3" @onclick="OptimiseGrid">Optimize Grid</button>
   <button class="@(Styles.Btn) m-3" @onclick="PlayCopter">Play Copter</button>
   <button class="@(Styles.Btn) m-3" @onclick="Go">Follow Path</button>
-  <button class="@(Styles.Btn) m-3" @onclick="PlayGame">Play Game</button>
+  <button class="@(Styles.Btn) m-3" @onclick="PlayGame" disabled="@game.Playing">Play Game</button>
+  <button class="@(Styles.Btn) m-3" @onclick="ActivateTurbo" disabled="@(game.Turbo || !game.Playing)">Turbo</button>
+  <button class="@(Styles.Btn) m-3" @onclick="DeactivateTurbo" disabled="@(!game.Turbo || !game.Playing)">Stop Turbo</button>
 
   <div class="flex">
     <div class="@classStyle">Initial Path Cost: @game.Rover.StartingPathCost</div>

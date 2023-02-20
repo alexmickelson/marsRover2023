@@ -9,6 +9,9 @@ public static class Styles
       text-gray-100 
       border-gray-500 
       
+      disabled:text-gray-400 
+      disabled:border-gray-800 
+
       transform
       transition
       duration-500

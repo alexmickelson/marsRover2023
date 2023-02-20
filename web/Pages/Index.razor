@@ -4,16 +4,23 @@
 @code {
   public string gameId { get; set; } = "";
   public string name { get; set; } = "Test_Alex";
+  public bool HasClickedRegister { get; set; } = false;
+  public bool RegisterComplete { get; set; } = false;
   public async Task Register()
   {
+    if (gameId == "")
+      return;
+    HasClickedRegister = true;
     await game.Register(gameId, name);
+    RegisterComplete = true;
   }
 }
 
 <PageTitle>Index</PageTitle>
-<div class="container mx-auto">
+@if (!HasClickedRegister)
+{
+  <div class="container mx-auto">
   <div class="flex">
-
     <form @onsubmit:preventDefault="true" @onsubmit="Register">
       <div>
         <label>Game ID:</label>
@@ -30,6 +37,14 @@
     </form>
   </div>
 </div>
+}
+@if (HasClickedRegister && !RegisterComplete)
+{
+  <div>Registering...</div>
+  <div class="align-center">
+    <Spinner />
+  </div>
+}
 
 @if (game.Map != null)
 {

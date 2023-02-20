@@ -9,6 +9,9 @@ public class GamePlayer
   public PerserveranceRover Rover { get; private set; }
   public List<PerserveranceRover> Rovers { get; private set; } = new();
   public List<IngenuityCopter> Copters { get; set; } = new();
+  public bool Turbo { get; set; } = false;
+
+  public bool Playing { get; set; } = false;
 
   public int CopterCount { get; set; } = 10;
 
@@ -48,6 +51,7 @@ public class GamePlayer
 
   public void PlayGame()
   {
+    Playing = true;
     var roverThread = PlayRover();
 
     var copterThreads = PlayCopter();
@@ -97,19 +101,30 @@ public class GamePlayer
     {
       while (true)
       {
+        var fullTimer = System.Diagnostics.Stopwatch.StartNew();
         var (start, end, cost, time) = await Rover.Take1Step();
-        System.Console.WriteLine(
-          $"{start} -> {end}, cost: {cost}, time: {time} ms"
-        );
-        if (!Map.IsAnEdge(Rover.CurrentLocation))
-        {
-          Rover.CalculateDetailedPath();
 
-          if (Rover.History.Count() % 10 == 0)
-            Rover.OptimizeGrid(reset: true);
-          else
-            Rover.OptimizeGrid();
+        if (!Map.IsAnEdge(Rover.CurrentLocation) && !Turbo)
+        {
+          if (Rover.History.Count() % 3 == 0)
+            Rover.CalculateDetailedPath();
+
+          Task.Run(() =>
+          {
+            if (Rover.History.Count() % 10 == 0)
+              Rover.OptimizeGrid(reset: true);
+            else
+              Rover.OptimizeGrid();
+          });
         }
+
+        fullTimer.Stop();
+        var fullTime = (int)fullTimer.ElapsedMilliseconds;
+        System.Console.WriteLine(
+          $"{start} -> {end}, cost: {cost.ToString().PadLeft(3, ' ')},"
+            + $" time: {fullTime.ToString().PadLeft(4, ' ')},"
+            + $" request time: {time.ToString().PadLeft(4, ' ')} ms"
+        );
       }
     });
     t.Start();
@@ -168,13 +183,40 @@ public class GamePlayer
       {
         var t = new Thread(async () =>
         {
-          await restOfCopters.ElementAt(i).FollowManyPaths(paths);
+          var c = restOfCopters.ElementAt(i);
+
+          foreach (var originalPath in paths)
+          {
+            var startIsClosest =
+              IngenuityCopter.DistanceToTarget(originalPath.First(), c.Location)
+              < IngenuityCopter.DistanceToTarget(originalPath.Last(), c.Location);
+
+            var bestPath = startIsClosest ? originalPath : originalPath.Reverse();
+            var startOfPath = bestPath.First();
+
+            while (startOfPath != c.Location)
+            {
+              await c.TakeStepToTarget(startOfPath);
+            }
+
+            var target = bestPath.Last();
+
+            while (c.Location != target)
+            {
+              await c.TakeStepToTarget(target);
+            }
+          }
         });
         return t;
       }
     );
 
-    var copterThreads = new Thread[] { followPathThenStop, followPathThenDoItAgain, roverFollowerThread }; //.Concat(otherThreads);
+    var copterThreads = new Thread[]
+    {
+      followPathThenStop,
+      followPathThenDoItAgain,
+      roverFollowerThread
+    }.Concat(otherThreads);
     // var copterThreads = new Thread[] { otherThreads.First() };
     // var copterThreads = otherThreads;
 
