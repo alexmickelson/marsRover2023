@@ -11,7 +11,7 @@
   public void OptimiseGrid()
   {
     System.Console.WriteLine("Started Grid Optimization");
-    game.Rover.OptimizeGrid();
+    game.Rover.OptimizeGrid(reset: true);
     System.Console.WriteLine("Ended Grid Optimization");
   }
 
@@ -19,7 +19,6 @@
   {
     System.Console.WriteLine("Playing copter");
     var t = game.PlayCopter();
-    t.ToList().ForEach( t=> t.Join());
   }
 
   public void Go()
@@ -29,9 +28,11 @@
     t.Join();
   }
 
-  public void PlayGame() 
+  public async Task PlayGame()
   {
-    game.PlayGame();
+    await Task.Run(() =>
+      game.PlayGame()
+    );
   }
   public string classStyle = " m-5 ";
 }

@@ -1,16 +1,19 @@
-
 using System.Collections.Concurrent;
 using static System.Linq.Enumerable;
 
 public class MarsMap
 {
-  public ConcurrentDictionary<(int, int), int> Grid { get; private set; }
-  public ConcurrentDictionary<(int, int), int> OptimizedGrid { get; set; }
-  public ConcurrentDictionary<(int, int), int> LowResGrid { get; private set; }
+  public ConcurrentDictionary<(int x, int y), int> Grid { get; private set; }
+  public ConcurrentDictionary<(int x, int y), int> OptimizedGrid { get; set; }
+  public ConcurrentDictionary<(int x, int y), int> LowResGrid
+  {
+    get;
+    private set;
+  }
   public IEnumerable<LowResolutionMap> LowResolutionMaps { get; private set; }
   public event Action OnMapUpdated;
   public int LowResScaleFactor { get; set; }
-  public (int, int) TopRight { get; set; } = (0, 0);
+  public (int x, int y) TopRight { get; set; } = (0, 0);
 
   public MarsMap(
     IEnumerable<LowResolutionMap> lowResMap,
@@ -59,13 +62,27 @@ public class MarsMap
     }
   }
 
-  public void UpdateGridWithNeighbors(IEnumerable<Neighbor> neighbors)
+  public void UpdateGridWithNeighbors(
+    IEnumerable<Neighbor> neighbors
+  )
   {
     foreach (var neighbor in neighbors)
     {
       Grid[(neighbor.X, neighbor.Y)] = neighbor.Difficulty;
       if (OptimizedGrid != null)
         OptimizedGrid[(neighbor.X, neighbor.Y)] = neighbor.Difficulty;
+    }
+    if (OnMapUpdated != null)
+      Task.Run(() => OnMapUpdated());
+  }
+
+  public void CopterUpdateGridWithNeighbors(
+    IEnumerable<Neighbor> neighbors
+  )
+  {
+    foreach (var neighbor in neighbors)
+    {
+      Grid[(neighbor.X, neighbor.Y)] = neighbor.Difficulty;
     }
     if (OnMapUpdated != null)
       Task.Run(() => OnMapUpdated());
@@ -110,14 +127,14 @@ public class MarsMap
       || location.Item2 == TopRight.Item2;
   }
 
-  public void OptimizeGrid(IEnumerable<(int, int)> path)
+  public void OptimizeGrid(IEnumerable<(int, int)> path, bool reset)
   {
     var newGrid =
-      OptimizedGrid == null
+      OptimizedGrid == null || reset
         ? new ConcurrentDictionary<(int, int), int>()
         : new ConcurrentDictionary<(int, int), int>(OptimizedGrid);
 
-    var range = 20;
+    var range = 50;
     foreach (var location in path)
     {
       var neighbors = Range(location.Item1 - range / 2, range)

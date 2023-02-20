@@ -1,25 +1,33 @@
 public class PerserveranceRover
 {
   private IGameService gameService;
-  public (int, int) CurrentLocation { get; private set; } = default;
-  public (int, int) StartingLocation { get; private set; } = default;
+  public (int x, int y) CurrentLocation { get; private set; } = default;
+
+  public (int x, int y) GetCurrentLocation() => CurrentLocation;
+
+  public (int x, int y) StartingLocation { get; private set; } = default;
   public int LastPathCalulationTime { get; private set; }
   public int LastGridOptimizationTime { get; private set; }
   public string Orientation { get; private set; }
   public int Battery { get; private set; }
   public MarsMap? Map { get; private set; } = null;
-  public List<(int, int)> History { get; set; } = new();
+  public List<(int x, int y)> History { get; set; } = new();
   public event Action OnPositionChanged;
   public event Action OnPathUpdated;
-  public IEnumerable<(int, int)> Path { get; private set; } =
+  public IEnumerable<(int x, int y)> Path { get; private set; } =
     new (int, int)[] { };
+
+  public IEnumerable<(int x, int y)> GetPath()
+  {
+    return Path;
+  }
 
   public int StartingPathCost { get; private set; }
   public int TotalProjectedCost
   {
     get => Map.CalculatePathCost(History) + Map.CalculatePathCost(Path);
   }
-  public (int, int) Target { get; private set; } = default;
+  public (int x, int y) Target { get; private set; } = default;
 
   public string Token { get; private set; }
 
@@ -82,14 +90,14 @@ public class PerserveranceRover
       Task.Run(() => OnPathUpdated());
   }
 
-  public void OptimizeGrid()
+  public void OptimizeGrid(bool reset = false)
   {
     if (Path.Count() == 0)
       CalculateDetailedPath(optimize: true);
 
     var gridOptimizationTimer = System.Diagnostics.Stopwatch.StartNew();
     gridOptimizationTimer.Start();
-    Map.OptimizeGrid(Path);
+    Map.OptimizeGrid(Path, reset);
 
     gridOptimizationTimer.Stop();
     LastGridOptimizationTime = (int)gridOptimizationTimer.ElapsedMilliseconds;

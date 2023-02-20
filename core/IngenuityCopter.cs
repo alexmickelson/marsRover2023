@@ -30,27 +30,47 @@ public class IngenuityCopter
     await moveAndUpdateStatus(target, bestNeigbor);
   }
 
-  public async Task FollowPath(
-    IEnumerable<(int x, int y)> path,
-    (int, int) fallbackTarget
+  public async Task FollowManyPaths(
+    IEnumerable<IEnumerable<(int x, int y)>> paths
   )
   {
-    var target = path.Last();
+    foreach (var path in paths)
+    {
+      var startIsClosest =
+        DistanceToTarget(path.First(), Location)
+        < DistanceToTarget(path.Last(), Location);
 
+      var startOfPath = startIsClosest ? path.First() : path.Last();
+
+      while (startOfPath != Location)
+      {
+        await TakeStepToTarget(startOfPath);
+      }
+
+      var bestPath = startIsClosest ? path : path.Reverse();
+      var target = path.Last();
+      while (Location != target)
+      {
+        await TakeBestStepOnPath(path);
+      }
+    }
+  }
+
+
+  public async Task TakeBestStepOnPath(IEnumerable<(int x, int y)> path)
+  {
     IEnumerable<(int x, int y)> validNeighbors = getValidNeighborsInRange();
 
     var bestNeigbor = path.Reverse()
       .FirstOrDefault(l => validNeighbors.Contains(l));
 
-    var closestPath = path.Reverse().MinBy(l => validNeighbors.Min(n => DistanceToTarget(l, n)));
+    var closestPath = path.Reverse()
+      .MinBy(l => validNeighbors.Min(n => DistanceToTarget(l, n)));
 
-    // if (bestNeigbor == default)
-    // {
-    //   await TakeStepToTarget(fallbackTarget);
-    //   return;
-    // }
+    var lastStepInRange = validNeighbors.Contains(path.Last());
 
-    await TakeStepToTarget(closestPath);
+    var nextStep = lastStepInRange ? path.Last() : closestPath;
+    await TakeStepToTarget(nextStep);
   }
 
   private async Task moveAndUpdateStatus(
@@ -59,9 +79,6 @@ public class IngenuityCopter
   )
   {
     checkDistanceTooFar(bestNeigbor);
-    // System.Console.WriteLine(
-    //   $"Moving copter from {Location} to {bestNeigbor}, target: {target}"
-    // );
     var response = await gameService.MoveIngenuity(
       Token,
       bestNeigbor.x,
@@ -69,15 +86,14 @@ public class IngenuityCopter
     );
     GameMovement.CheckIfNewLocationUnexpected(bestNeigbor, response);
 
-    Map.UpdateGridWithNeighbors(response.Neighbors);
     Location = (response.X, response.Y);
     Battery = response.BatteryLevel;
+
+    
+    Map.CopterUpdateGridWithNeighbors(response.Neighbors);
   }
 
-  private static double DistanceToTarget(
-    (int x, int y) target,
-    (int x, int y) l
-  )
+  public static double DistanceToTarget((int x, int y) target, (int x, int y) l)
   {
     return Math.Sqrt(
       Math.Pow(Math.Abs(l.x - target.x), 2)
