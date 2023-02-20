@@ -106,7 +106,7 @@ public class GamePlayer
           Rover.CalculateDetailedPath();
 
           if (Rover.History.Count() % 10 == 0)
-            Rover.OptimizeGrid();
+            Rover.OptimizeGrid(reset: true);
           else
             Rover.OptimizeGrid();
         }
