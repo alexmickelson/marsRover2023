@@ -28,7 +28,14 @@ public class MarsMap
 
   public int CalculatePathCost(IEnumerable<(int, int)> path)
   {
-    return path.Select(l => Grid[l]).Sum();
+    try
+    {
+      return path.Select(l => Grid[l]).Sum();
+    }
+    catch (Exception e)
+    {
+      return CalculatePathCost(path);
+    }
   }
 
   private void initializeLowResData(IEnumerable<LowResolutionMap> lowResMap)
@@ -109,7 +116,6 @@ public class MarsMap
         ? new ConcurrentDictionary<(int, int), int>()
         : new ConcurrentDictionary<(int, int), int>(OptimizedGrid);
 
-    // var newGrid = new ConcurrentDictionary
     var range = 20;
     foreach (var location in path)
     {

@@ -21,13 +21,15 @@ public class PerserveranceRover
   }
   public (int, int) Target { get; private set; } = default;
 
+  public string Token { get; private set; }
+
   public PerserveranceRover(
     IGameService gameService,
     MarsMap map,
     (int, int) start,
     (int, int) target,
-    int battery,
-    string orientation
+    string orientation,
+    string token
   )
   {
     this.gameService = gameService;
@@ -35,8 +37,8 @@ public class PerserveranceRover
     CurrentLocation = start;
     StartingLocation = start;
     Target = target;
-    Battery = battery;
     Orientation = Orientation;
+    Token = token;
   }
 
   public void CalculateDetailedPath(bool optimize = false)
@@ -159,7 +161,7 @@ public class PerserveranceRover
 
   private async Task<MoveResponse> MoveAndUpdateStatus(Direction direction)
   {
-    var response = await gameService.Move(direction);
+    var response = await gameService.Move(Token, direction);
 
     var batteryDiff = Battery - response.BatteryLevel;
 

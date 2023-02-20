@@ -14,11 +14,10 @@ public interface IGameService
   string? GameId { get; set; }
   string Name { get; }
   string ServerAddress { get; init; }
-  string? Token { get; }
 
   Task<JoinResponse> JoinGame(string name = "Test_Alex");
-  Task<MoveResponse> Move(Direction direction);
-  Task<MoveResponse> MoveIngenuity(int row, int col);
+  Task<MoveResponse> Move(string token, Direction direction);
+  Task<MoveResponse> MoveIngenuity(string token, int row, int col);
 }
 
 public class GameService : IGameService
@@ -27,7 +26,6 @@ public class GameService : IGameService
   public string? GameId { get; set; }
   public string Name { get; private set; }
   public string ServerAddress { get; init; }
-  public string? Token { get; private set; }
 
   public GameService()
   {
@@ -49,13 +47,12 @@ public class GameService : IGameService
       System.Console.WriteLine(response.StatusCode);
       throw new Exception("Error Joining Game");
     }
-    Token = response.Data.Token;
     return response.Data;
   }
 
-  public async Task<MoveResponse> Move(Direction direction)
+  public async Task<MoveResponse> Move(string token, Direction direction)
   {
-    var joinUrl = $"/game/moveperseverance?token={Token}&direction={direction}";
+    var joinUrl = $"/game/moveperseverance?token={token}&direction={direction}";
     var request = new RestRequest(joinUrl);
     var response = await client.ExecuteGetAsync<MoveResponse>(request);
 
@@ -63,26 +60,24 @@ public class GameService : IGameService
     {
       System.Console.WriteLine("Not ready to play yet");
       Thread.Sleep(100);
-      return await Move(direction);
+      return await Move(token, direction);
     }
 
     if (isRateLimited(response))
     {
-      System.Console.WriteLine(response.Data);
-      System.Console.WriteLine("Got rate limited, sleeping");
       Thread.Sleep(300);
-      return await Move(direction);
+      return await Move(token, direction);
     }
 
     if (isOutOfBattery(response))
     {
       System.Console.WriteLine("not enough battery, sleeping");
       Thread.Sleep(1000);
-      return await Move(direction);
+      return await Move(token, direction);
     }
 
     if (unableToUpdatePlayerExceptionReturned(response))
-      return await Move(direction);
+      return await Move(token, direction);
 
     handleBadMoveResponse(response);
     if (!response.Data.Message.ToLower().Contains(" ok"))
@@ -128,41 +123,45 @@ public class GameService : IGameService
 
   private static bool isRateLimited(RestResponse<MoveResponse> response)
   {
-    return response.StatusCode == System.Net.HttpStatusCode.TooManyRequests;
+    var isLimited = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests;
+    if (isLimited)
+    {
+      // System.Console.WriteLine(response.Data);
+      // System.Console.WriteLine("Got rate limited, sleeping");
+    }
+    return isLimited;
   }
 
-  public async Task<MoveResponse> MoveIngenuity(int x, int y)
+  public async Task<MoveResponse> MoveIngenuity(string token, int x, int y)
   {
     var joinUrl =
-      $"/game/moveingenuity?token={Token}&destinationRow={x}&destinationColumn={y}";
+      $"/game/moveingenuity?token={token}&destinationRow={x}&destinationColumn={y}";
     var request = new RestRequest(joinUrl);
 
     var response = await client.ExecuteGetAsync<MoveResponse>(request);
 
     if (gameNotStarted(response))
     {
-      System.Console.WriteLine("Not ready to play yet");
+      // System.Console.WriteLine("Not ready to play yet");
       Thread.Sleep(100);
-      return await MoveIngenuity(x, y);
+      return await MoveIngenuity(token, x, y);
     }
 
     if (isRateLimited(response))
     {
-      System.Console.WriteLine(response.Data);
-      System.Console.WriteLine("Got rate limited, sleeping");
       Thread.Sleep(300);
-      return await MoveIngenuity(x, y);
+      return await MoveIngenuity(token, x, y);
     }
 
     if (isOutOfBattery(response))
     {
       System.Console.WriteLine("not enough battery, sleeping");
       Thread.Sleep(1000);
-      return await MoveIngenuity(x, y);
+      return await MoveIngenuity(token, x, y);
     }
 
     if (unableToUpdatePlayerExceptionReturned(response))
-      return await MoveIngenuity(x, y);
+      return await MoveIngenuity(token, x, y);
 
     handleBadMoveResponse(response);
     if (!response.Data.Message.ToLower().Contains(" ok"))

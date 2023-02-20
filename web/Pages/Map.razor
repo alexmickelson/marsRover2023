@@ -50,9 +50,8 @@
     if (!game.Map.Grid.ContainsKey(location))
       return "";
 
-    if (location == game.Copter.Location)
+    if (game.Copters.Where(c => c.Location == location).Count() > 0)
       return "cell bg-lime-800";
-
 
     if (location == game.Rover.CurrentLocation)
       return "cell bg-lime-600";

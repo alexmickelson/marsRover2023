@@ -8,52 +8,30 @@
     game.Rover.OnPositionChanged += refreshFromAnotherThread;
     game.Map.OnMapUpdated += refreshFromAnotherThread;
   }
-  public async Task CalculatePath()
-  {
-    System.Console.WriteLine("Started Path Calculation");
-    game.Rover.CalculateDetailedPath();
-    System.Console.WriteLine("Ended Path Calculation");
-  }
-
   public void OptimiseGrid()
   {
     System.Console.WriteLine("Started Grid Optimization");
     game.Rover.OptimizeGrid();
     System.Console.WriteLine("Ended Grid Optimization");
   }
-  private bool stepInProgress { get; set; } = false;
-  public async Task TakeCopterStep()
-  {
-    stepInProgress = true;
-    try
-    {
-      System.Console.WriteLine("Started Copter Step");
-      System.Console.WriteLine(game.Copter.Location);
-      await game.Copter.TakeStepToTarget(game.Rover.Target);
-      System.Console.WriteLine("Ended Copter Step");
-    }
-    catch (Exception e)
-    {
 
-      System.Console.WriteLine(e);
-      System.Console.WriteLine("Error Copter Step");
-    }
-    finally
-    {
-      stepInProgress = false;
-    }
-  }
-
-  public async Task PlayCopter()
+  public void PlayCopter()
   {
     System.Console.WriteLine("Playing copter");
-    await game.PlayCopter();
+    var t = game.PlayCopter();
+    t.ToList().ForEach( t=> t.Join());
   }
 
-  public async Task Go()
+  public void Go()
   {
     System.Console.WriteLine("Starting to play game");
-    await game.PlayGame();
+    var t = game.PlayRover();
+    t.Join();
+  }
+
+  public void PlayGame() 
+  {
+    game.PlayGame();
   }
   public string classStyle = " m-5 ";
 }
@@ -61,21 +39,21 @@
 <div>
 
   <button class="@(Styles.Btn) m-3" @onclick="OptimiseGrid">Optimize Grid</button>
-  <button class="@(Styles.Btn) m-3" @onclick="CalculatePath">Calculate Path</button>
-  <button class="@(Styles.Btn) m-3" @onclick="TakeCopterStep" disabled="@stepInProgress">Take Copter Step</button>
   <button class="@(Styles.Btn) m-3" @onclick="PlayCopter">Play Copter</button>
   <button class="@(Styles.Btn) m-3" @onclick="Go">Follow Path</button>
+  <button class="@(Styles.Btn) m-3" @onclick="PlayGame">Play Game</button>
 
   <div class="flex">
     <div class="@classStyle">Initial Path Cost: @game.Rover.StartingPathCost</div>
     <div class="@classStyle">History and Remaining Cost: @game.Rover.TotalProjectedCost</div>
-    <div class="@classStyle">Copter Battery: @game.Copter.Battery</div>
+    @foreach (var copter in game.Copters)
+    {
+      <div class="@classStyle">Copter Battery: @copter.Battery</div>
+    }
   </div>
   <div class="flex">
     @if (game.Rover.Path != null)
     {
-
-      @* <div class="text-sm">Path Length: @game.Path.Count()</div> *@
       <div class="@classStyle">Path Cost: @game.Map.CalculatePathCost(game.Rover.Path)</div>
       <div class="@classStyle">Battery: @game.Rover.Battery</div>
       <div class="@classStyle">Path Calulation Time: @game.Rover.LastPathCalulationTime ms</div>

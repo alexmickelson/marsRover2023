@@ -6,16 +6,19 @@ public class IngenuityCopter
   public MarsMap Map { get; }
   public (int x, int y) Location { get; private set; }
   public int Battery { get; private set; }
+  public string Token { get; private set; }
 
   public IngenuityCopter(
     IGameService gameService,
     MarsMap map,
-    (int, int) start
+    (int, int) start,
+    string token
   )
   {
     this.gameService = gameService;
     Map = map;
     Location = start;
+    Token = token;
   }
 
   public async Task TakeStepToTarget((int x, int y) target)
@@ -60,6 +63,7 @@ public class IngenuityCopter
     //   $"Moving copter from {Location} to {bestNeigbor}, target: {target}"
     // );
     var response = await gameService.MoveIngenuity(
+      Token,
       bestNeigbor.x,
       bestNeigbor.y
     );

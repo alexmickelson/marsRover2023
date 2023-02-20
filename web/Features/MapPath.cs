@@ -96,7 +96,7 @@ public class MapPath
     bool optimize
   )
   {
-    optimize = true;
+    // optimize = true;
     List<(int, int)> neighbors = optimize
       ? GetNeighborsOptimized(currentCheckLocation, target, topRight)
       : GetNeighbors(currentCheckLocation, target, topRight);
@@ -122,7 +122,9 @@ public class MapPath
         Math.Abs(n.Item1 - target.Item1) + Math.Abs(n.Item2 - target.Item2);
       var furtherAway = nextDistanceToTarget > distanceToTarget;
 
-      var nextCost = grid[n] * 3 + currentCost;
+
+      var costMultiplier = optimize ? 6 : 1;
+      var nextCost = (grid[n] * costMultiplier) + currentCost;
       var historyEntry = new PathHistory(nextCost, n, currentCheckLocation);
       locationsToCheck.Add(historyEntry);
     }
@@ -134,7 +136,6 @@ public class MapPath
     (int, int) topRight
   )
   {
-    // var allowBacktracking = false;
 
     var neighbors = new List<(int, int)>();
 
