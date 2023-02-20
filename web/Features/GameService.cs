@@ -64,25 +64,25 @@ public class GameService : IGameService
       System.Console.WriteLine("Not ready to play yet");
       Thread.Sleep(100);
       return await Move(direction);
-      // response = await client.ExecuteGetAsync<MoveResponse>(request);
     }
 
-    if (isRateLimited(response) || isOutOfBattery(response))
+    if (isRateLimited(response))
     {
-      var sleepTime = 1000;
-      if (isRateLimited(response))
-      {
-        System.Console.WriteLine(response.Data);
-        System.Console.WriteLine("Got rate limited, sleeping");
-        sleepTime = 300;
-      }
-      else
-        System.Console.WriteLine("not enough battery, sleeping");
-
-      Thread.Sleep(sleepTime);
-
+      System.Console.WriteLine(response.Data);
+      System.Console.WriteLine("Got rate limited, sleeping");
+      Thread.Sleep(300);
       return await Move(direction);
     }
+
+    if (isOutOfBattery(response))
+    {
+      System.Console.WriteLine("not enough battery, sleeping");
+      Thread.Sleep(1000);
+      return await Move(direction);
+    }
+
+    if (unableToUpdatePlayerExceptionReturned(response))
+      return await Move(direction);
 
     handleBadMoveResponse(response);
     if (!response.Data.Message.ToLower().Contains(" ok"))
@@ -90,6 +90,13 @@ public class GameService : IGameService
     return response.Data;
   }
 
+  private static bool unableToUpdatePlayerExceptionReturned(RestResponse<MoveResponse> response)
+  {
+    var isUnable = response.Content != null && response.Content.ToLower().Contains("unabletoupdateplayerexception");
+    if (isUnable)
+      System.Console.WriteLine("Found UnableToUpdatePlayer Exception");
+    return isUnable;
+  }
 
   private static bool gameNotStarted(RestResponse<MoveResponse> response)
   {
@@ -137,25 +144,25 @@ public class GameService : IGameService
       System.Console.WriteLine("Not ready to play yet");
       Thread.Sleep(100);
       return await MoveIngenuity(x, y);
-      // response = await client.ExecuteGetAsync<MoveResponse>(request);
     }
 
-    if (isRateLimited(response) || isOutOfBattery(response))
+    if (isRateLimited(response))
     {
-      var sleepTime = 1000;
-      if (isRateLimited(response))
-      {
-        System.Console.WriteLine(response.Data);
-        System.Console.WriteLine("Got rate limited, sleeping");
-        sleepTime = 300;
-      }
-      else
-        System.Console.WriteLine("not enough battery, sleeping");
-
-      Thread.Sleep(sleepTime);
-
+      System.Console.WriteLine(response.Data);
+      System.Console.WriteLine("Got rate limited, sleeping");
+      Thread.Sleep(300);
       return await MoveIngenuity(x, y);
     }
+
+    if (isOutOfBattery(response))
+    {
+      System.Console.WriteLine("not enough battery, sleeping");
+      Thread.Sleep(1000);
+      return await MoveIngenuity(x, y);
+    }
+
+    if (unableToUpdatePlayerExceptionReturned(response))
+      return await MoveIngenuity(x, y);
 
     handleBadMoveResponse(response);
     if (!response.Data.Message.ToLower().Contains(" ok"))
