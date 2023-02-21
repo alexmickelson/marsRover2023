@@ -2,12 +2,12 @@ using System.Collections.Concurrent;
 
 public class MapPath
 {
-  public static IEnumerable<(int, int)> CalculatePath(
-    ConcurrentDictionary<(int, int), int> grid,
-    (int, int) currentLocation,
-    (int, int) target,
-    (int, int) topRight,
-    IEnumerable<(int, int)> roverHistory,
+  public static IEnumerable<(int x, int y)> CalculatePath(
+    ConcurrentDictionary<(int x, int y), int> grid,
+    (int x, int y) currentLocation,
+    (int x, int y) target,
+    (int x, int y) topRight,
+    IEnumerable<(int x, int y)> roverHistory,
     bool optimize = true
   )
   {
@@ -15,7 +15,7 @@ public class MapPath
       initializeBreadthFirstDataStructures(currentLocation);
 
     var nextLocationsToCheck = new List<PathHistory>();
-    var visited = new List<(int, int)>();
+    var visited = new List<(int x, int y)>();
 
     while (currentCheckLocation != target)
     {
@@ -41,11 +41,11 @@ public class MapPath
   }
 
   private static (
-    (int, int),
-    Dictionary<(int, int), PathHistory>
-  ) initializeBreadthFirstDataStructures((int, int) currentCheckLocation)
+    (int x, int y),
+    Dictionary<(int x, int y), PathHistory>
+  ) initializeBreadthFirstDataStructures((int x, int y) currentCheckLocation)
   {
-    var locationPaths = new Dictionary<(int, int), PathHistory>();
+    var locationPaths = new Dictionary<(int x, int y), PathHistory>();
     locationPaths[currentCheckLocation] = new(0, currentCheckLocation, null);
     return (currentCheckLocation, locationPaths);
   }
@@ -63,16 +63,16 @@ public class MapPath
     return (historyEntry, locationsToProcess);
   }
 
-  private static IEnumerable<(int, int)> reconstructPathFromHistory(
-    Dictionary<(int, int), PathHistory> locationPaths,
-    (int, int) destination
+  private static IEnumerable<(int x, int y)> reconstructPathFromHistory(
+    Dictionary<(int x, int y), PathHistory> locationPaths,
+    (int x, int y) destination
   )
   {
-    List<(int, int)> path = new List<(int, int)>() { destination };
+    List<(int x, int y)> path = new List<(int x, int y)>() { destination };
     var previous = locationPaths[destination].PreviousLocation;
     while (previous != null)
     {
-      var notNullPrevious = ((int, int))previous;
+      var notNullPrevious = ((int x, int y))previous;
       path.Add(notNullPrevious);
       previous = locationPaths[notNullPrevious].PreviousLocation;
     }
@@ -81,23 +81,23 @@ public class MapPath
 
   record PathHistory(
     int Cost,
-    (int, int) Location,
-    (int, int)? PreviousLocation
+    (int x, int y) Location,
+    (int x, int y)? PreviousLocation
   );
 
   private static void addNewNeighborsToList(
-    ConcurrentDictionary<(int, int), int> grid,
-    (int, int) currentCheckLocation,
-    (int, int) target,
-    (int, int) topRight,
-    Dictionary<(int, int), PathHistory> locationPaths,
+    ConcurrentDictionary<(int x, int y), int> grid,
+    (int x, int y) currentCheckLocation,
+    (int x, int y) target,
+    (int x, int y) topRight,
+    Dictionary<(int x, int y), PathHistory> locationPaths,
     List<PathHistory> locationsToCheck,
-    IEnumerable<(int, int)> roverHistory,
+    IEnumerable<(int x, int y)> roverHistory,
     bool optimize
   )
   {
     // optimize = true;
-    List<(int, int)> neighbors = optimize
+    List<(int x, int y)> neighbors = optimize
       ? GetNeighborsOptimized(currentCheckLocation, target, topRight)
       : GetNeighbors(currentCheckLocation, target, topRight);
 
@@ -113,100 +113,112 @@ public class MapPath
     var currentCost = grid[currentCheckLocation];
 
     var distanceToTarget =
-      Math.Abs(currentCheckLocation.Item1 - target.Item1)
-      + Math.Abs(currentCheckLocation.Item2 - target.Item2);
+      Math.Abs(currentCheckLocation.x - target.x)
+      + Math.Abs(currentCheckLocation.y - target.y);
 
     foreach (var n in orderedNeighbors)
     {
       var nextDistanceToTarget =
-        Math.Abs(n.Item1 - target.Item1) + Math.Abs(n.Item2 - target.Item2);
+        Math.Abs(n.x - target.x) + Math.Abs(n.y - target.y);
       var furtherAway = nextDistanceToTarget > distanceToTarget;
+
+      var lastHistoryEntry = locationPaths[currentCheckLocation];
+      var previousLocation = lastHistoryEntry.PreviousLocation;
+
+      var lastOffset = (
+        currentCheckLocation.x - previousLocation?.x ?? currentCheckLocation.x,
+        currentCheckLocation.y - previousLocation?.y ?? currentCheckLocation.y
+      );
+
+      var currentOffset = (
+        n.x - currentCheckLocation.x,
+        n.y - currentCheckLocation.y
+      );
 
 
       var costMultiplier = optimize ? 6 : 1;
       var nextCost = (grid[n] * costMultiplier) + currentCost;
+      if (lastOffset != currentOffset)
+        nextCost += 30;
       var historyEntry = new PathHistory(nextCost, n, currentCheckLocation);
       locationsToCheck.Add(historyEntry);
     }
   }
 
-  public static List<(int, int)> GetNeighbors(
-    (int, int) location,
-    (int, int) target,
-    (int, int) topRight
+  public static List<(int x, int y)> GetNeighbors(
+    (int x, int y) location,
+    (int x, int y) target,
+    (int x, int y) topRight
   )
   {
+    var neighbors = new List<(int x, int y)>();
 
-    var neighbors = new List<(int, int)>();
-
-    var xDistance = Math.Abs(location.Item1 - target.Item1);
-    var yDistance = Math.Abs(location.Item2 - target.Item2);
+    var xDistance = Math.Abs(location.x - target.x);
+    var yDistance = Math.Abs(location.y - target.y);
     var xAxisLonger = xDistance > yDistance;
 
-    bool xDecreaseIsTowardsTarget = location.Item1 >= target.Item1;
-    bool xIncreaseIsTowardsTarget = location.Item1 <= target.Item1;
+    bool xDecreaseIsTowardsTarget = location.x >= target.x;
+    bool xIncreaseIsTowardsTarget = location.x <= target.x;
 
-    bool yDecreaseIsTowardsTarget = location.Item2 >= target.Item2;
-    bool yIncreaseIsTowardsTarget = location.Item2 <= target.Item2;
+    bool yDecreaseIsTowardsTarget = location.y >= target.y;
+    bool yIncreaseIsTowardsTarget = location.y <= target.y;
 
-    bool xDecreaseInBounds = location.Item1 > 0;
-    bool xIncreaseInBounds = location.Item1 < topRight.Item1;
-    bool yDecreaseInBounds = location.Item2 > 0;
-    bool yIncreaseInBounds = location.Item2 < topRight.Item2;
+    bool xDecreaseInBounds = location.x > 0;
+    bool xIncreaseInBounds = location.x < topRight.x;
+    bool yDecreaseInBounds = location.y > 0;
+    bool yIncreaseInBounds = location.y < topRight.y;
 
     bool allowBackwards = false;
 
     if (allowBackwards)
     {
       if (xDecreaseInBounds)
-        neighbors.Add((location.Item1 - 1, location.Item2));
+        neighbors.Add((location.x - 1, location.y));
       if (yDecreaseInBounds)
-        neighbors.Add((location.Item1, location.Item2 - 1));
+        neighbors.Add((location.x, location.y - 1));
 
       if (xIncreaseInBounds)
-        neighbors.Add((location.Item1 + 1, location.Item2));
+        neighbors.Add((location.x + 1, location.y));
       if (yIncreaseInBounds)
-        neighbors.Add((location.Item1, location.Item2 + 1));
+        neighbors.Add((location.x, location.y + 1));
     }
     else
     {
       if (xDecreaseInBounds && (!xAxisLonger || xDecreaseIsTowardsTarget))
-        neighbors.Add((location.Item1 - 1, location.Item2));
+        neighbors.Add((location.x - 1, location.y));
       if (yDecreaseInBounds && (xAxisLonger || yDecreaseIsTowardsTarget))
-        neighbors.Add((location.Item1, location.Item2 - 1));
+        neighbors.Add((location.x, location.y - 1));
 
       if (xIncreaseInBounds && (!xAxisLonger || xIncreaseIsTowardsTarget))
-        neighbors.Add((location.Item1 + 1, location.Item2));
+        neighbors.Add((location.x + 1, location.y));
       if (yIncreaseInBounds && (xAxisLonger || yIncreaseIsTowardsTarget))
-        neighbors.Add((location.Item1, location.Item2 + 1));
+        neighbors.Add((location.x, location.y + 1));
     }
     return neighbors;
   }
 
-  public static List<(int, int)> GetNeighborsOptimized(
-    (int, int) location,
-    (int, int) target,
-    (int, int) topRight
+  public static List<(int x, int y)> GetNeighborsOptimized(
+    (int x, int y) location,
+    (int x, int y) target,
+    (int x, int y) topRight
   )
   {
-    var neighbors = new List<(int, int)>();
+    var neighbors = new List<(int x, int y)>();
 
-    bool canDecreaseX = location.Item1 >= target.Item1 && location.Item1 > 0;
-    bool canIncreaseX =
-      location.Item1 <= target.Item1 && location.Item1 < topRight.Item1;
-    bool canDecreaseY = location.Item2 >= target.Item2 && location.Item2 > 0;
-    bool canIncreaseY =
-      location.Item2 <= target.Item2 && location.Item2 < topRight.Item2;
+    bool canDecreaseX = location.x >= target.x && location.x > 0;
+    bool canIncreaseX = location.x <= target.x && location.x < topRight.x;
+    bool canDecreaseY = location.y >= target.y && location.y > 0;
+    bool canIncreaseY = location.y <= target.y && location.y < topRight.y;
 
     if (canDecreaseX)
-      neighbors.Add((location.Item1 - 1, location.Item2));
+      neighbors.Add((location.x - 1, location.y));
     if (canDecreaseY)
-      neighbors.Add((location.Item1, location.Item2 - 1));
+      neighbors.Add((location.x, location.y - 1));
 
     if (canIncreaseX)
-      neighbors.Add((location.Item1 + 1, location.Item2));
+      neighbors.Add((location.x + 1, location.y));
     if (canIncreaseY)
-      neighbors.Add((location.Item1, location.Item2 + 1));
+      neighbors.Add((location.x, location.y + 1));
 
     return neighbors;
   }

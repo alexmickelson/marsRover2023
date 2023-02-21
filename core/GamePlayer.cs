@@ -52,9 +52,12 @@ public class GamePlayer
   public void PlayGame()
   {
     Playing = true;
-    var roverThread = PlayRover();
 
-    var copterThreads = PlayCopter();
+    new Thread(() =>
+    {
+      var roverThread = PlayRover();
+      var copterThreads = PlayCopter();
+    }).Start();
   }
 
   private async Task<(
@@ -121,7 +124,7 @@ public class GamePlayer
         fullTimer.Stop();
         var fullTime = (int)fullTimer.ElapsedMilliseconds;
         System.Console.WriteLine(
-          $"{start} -> {end}, cost: {cost.ToString().PadLeft(3, ' ')},"
+          $"{start.ToString().PadLeft(8, ' ')} -> {end.ToString().PadLeft(8, ' ')}, cost: {cost.ToString().PadLeft(3, ' ')},"
             + $" time: {fullTime.ToString().PadLeft(4, ' ')},"
             + $" request time: {time.ToString().PadLeft(4, ' ')} ms"
         );
@@ -189,9 +192,14 @@ public class GamePlayer
           {
             var startIsClosest =
               IngenuityCopter.DistanceToTarget(originalPath.First(), c.Location)
-              < IngenuityCopter.DistanceToTarget(originalPath.Last(), c.Location);
+              < IngenuityCopter.DistanceToTarget(
+                originalPath.Last(),
+                c.Location
+              );
 
-            var bestPath = startIsClosest ? originalPath : originalPath.Reverse();
+            var bestPath = startIsClosest
+              ? originalPath
+              : originalPath.Reverse();
             var startOfPath = bestPath.First();
 
             while (startOfPath != c.Location)

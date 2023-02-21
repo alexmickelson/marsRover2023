@@ -21,26 +21,24 @@
     game.PlayCopter();
   }
 
-  public void Go()
+  public void PlayRover()
   {
     System.Console.WriteLine("Starting to play game");
     game.PlayRover();
 
   }
 
-  public async Task PlayGame()
+  public void PlayGame()
   {
-    await Task.Run(() =>
-      game.PlayGame()
-    );
+    game.PlayGame();
   }
 
-  public void ActivateTurbo() 
+  public void ActivateTurbo()
   {
     System.Console.WriteLine("activated turbo");
     game.Turbo = true;
   }
-  public void DeactivateTurbo() 
+  public void DeactivateTurbo()
   {
     System.Console.WriteLine("stopping turbo");
     game.Turbo = true;
@@ -52,18 +50,19 @@
 
   <button class="@(Styles.Btn) m-3" @onclick="OptimiseGrid">Optimize Grid</button>
   <button class="@(Styles.Btn) m-3" @onclick="PlayCopter">Play Copter</button>
-  <button class="@(Styles.Btn) m-3" @onclick="Go">Follow Path</button>
+  <button class="@(Styles.Btn) m-3" @onclick="PlayRover">Follow Path</button>
   <button class="@(Styles.Btn) m-3" @onclick="PlayGame" disabled="@game.Playing">Play Game</button>
   <button class="@(Styles.Btn) m-3" @onclick="ActivateTurbo" disabled="@(game.Turbo || !game.Playing)">Turbo</button>
-  <button class="@(Styles.Btn) m-3" @onclick="DeactivateTurbo" disabled="@(!game.Turbo || !game.Playing)">Stop Turbo</button>
+  <button class="@(Styles.Btn) m-3" @onclick="DeactivateTurbo" disabled="@(!game.Turbo || !game.Playing)">Stop
+    Turbo</button>
 
   <div class="flex">
     <div class="@classStyle">Initial Path Cost: @game.Rover.StartingPathCost</div>
     <div class="@classStyle">History and Remaining Cost: @game.Rover.TotalProjectedCost</div>
-    @foreach (var copter in game.Copters)
+    @* @foreach (var copter in game.Copters)
     {
       <div class="@classStyle">Copter Battery: @copter.Battery</div>
-    }
+    } *@
   </div>
   <div class="flex">
     @if (game.Rover.Path != null)
