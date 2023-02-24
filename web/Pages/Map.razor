@@ -75,9 +75,15 @@
     return "cell bg-rose-900";
   }
 
+  private int refreshCount {get; set;} = 0;
   protected override void OnInitialized()
   {
-    Action refreshFromAnotherThread = () => this.InvokeAsync(this.StateHasChanged);
+    Action refreshFromAnotherThread = () => {
+      if(refreshCount % 10 == 0)
+        this.InvokeAsync(this.StateHasChanged);
+      refreshCount += 1;
+    };
+
     game.Rover.OnPositionChanged += refreshFromAnotherThread;
     game.Rover.OnPathUpdated += refreshFromAnotherThread;
     if (game.Map != null)

@@ -30,15 +30,25 @@ public class MarsMap
     }
   }
 
-  public int CalculatePathCost(IEnumerable<(int, int)> path)
+  public int CalculatePathCost(
+    IEnumerable<(int x, int y)> path,
+    (int x, int y)? location = null
+  )
   {
     try
     {
-      return path.Select(l => Grid[l]).Sum();
+      if (path.Contains(location ?? (-100, -100)))
+      {
+        return path.Skip(path.ToList().IndexOf(location ?? (-100, -100)))
+          .Select(l => Grid[l])
+          .Sum();
+      }
+      else
+        return path.Select(l => Grid[l]).Sum();
     }
     catch (Exception e)
     {
-      return CalculatePathCost(path);
+      return CalculatePathCost(path, location);
     }
   }
 
@@ -62,9 +72,7 @@ public class MarsMap
     }
   }
 
-  public void UpdateGridWithNeighbors(
-    IEnumerable<Neighbor> neighbors
-  )
+  public void UpdateGridWithNeighbors(IEnumerable<Neighbor> neighbors)
   {
     foreach (var neighbor in neighbors)
     {
@@ -76,9 +84,7 @@ public class MarsMap
       Task.Run(() => OnMapUpdated());
   }
 
-  public void CopterUpdateGridWithNeighbors(
-    IEnumerable<Neighbor> neighbors
-  )
+  public void CopterUpdateGridWithNeighbors(IEnumerable<Neighbor> neighbors)
   {
     foreach (var neighbor in neighbors)
     {

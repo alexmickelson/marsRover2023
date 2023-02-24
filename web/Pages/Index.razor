@@ -3,7 +3,7 @@
 
 @code {
   public string gameId { get; set; } = "";
-  public string name { get; set; } = "Test_Alex";
+  public string name { get; set; } = "Alex";
   public bool HasClickedRegister { get; set; } = false;
   public bool RegisterComplete { get; set; } = false;
   public async Task Register()
@@ -29,6 +29,10 @@
       <div>
         <label>Name:</label>
         <input type="text" class="rounded bg-slate-600 p-1 m-1" @bind='name' />
+      </div>
+      <div>
+        <label>Register Count:</label>
+        <input type="text" class="rounded bg-slate-600 p-1 m-1" @bind='game.CopterCount' />
       </div>
 
       <button class="@(Styles.Btn)">

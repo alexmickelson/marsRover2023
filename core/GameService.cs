@@ -33,12 +33,18 @@ public class GameService : IGameService
     client = new RestClient(ServerAddress);
   }
 
-  public async Task<JoinResponse> JoinGame(string name = "Test_Alex")
+  public async Task<JoinResponse> JoinGame(string name)
   {
     Name = name;
     var joinUrl = $"/game/join?gameId={GameId}&name={Name}";
     var request = new RestRequest(joinUrl);
     var response = await client.ExecuteGetAsync<JoinResponse>(request);
+
+    if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+    {
+      Thread.Sleep(300);
+      return await JoinGame(name);
+    }
 
     if (!response.IsSuccessful || response.Data == null)
     {

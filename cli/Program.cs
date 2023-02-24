@@ -11,6 +11,7 @@ var gameId = args[0];
 System.Console.WriteLine($"Registering game: {gameId}");
 await game.Register(gameId, "Alex");
 
+game.Verbose = true;
 game.PlayGame();
 
 while (true)

@@ -7,6 +7,7 @@
     Action refreshFromAnotherThread = () => this.InvokeAsync(this.StateHasChanged);
     game.Rover.OnPositionChanged += refreshFromAnotherThread;
     game.Map.OnMapUpdated += refreshFromAnotherThread;
+    game.Verbose = false;
   }
   public void OptimiseGrid()
   {
@@ -41,7 +42,7 @@
   public void DeactivateTurbo()
   {
     System.Console.WriteLine("stopping turbo");
-    game.Turbo = true;
+    game.Turbo = false;
   }
   public string classStyle = " m-5 ";
 }
@@ -61,16 +62,18 @@
     <div class="@classStyle">History and Remaining Cost: @game.Rover.TotalProjectedCost</div>
     @* @foreach (var copter in game.Copters)
     {
-      <div class="@classStyle">Copter Battery: @copter.Battery</div>
+    <div class="@classStyle">Copter Battery: @copter.Battery</div>
     } *@
   </div>
   <div class="flex">
     @if (game.Rover.Path != null)
     {
-      <div class="@classStyle">Path Cost: @game.Map.CalculatePathCost(game.Rover.Path)</div>
+      <div class="@classStyle">Path Cost: @game.Map.CalculatePathCost(game.Rover.Path, game.Rover.CurrentLocation)</div>
       <div class="@classStyle">Battery: @game.Rover.Battery</div>
       <div class="@classStyle">Path Calulation Time: @game.Rover.LastPathCalulationTime ms</div>
       <div class="@classStyle">Grid Optmization Time: @game.Rover.LastGridOptimizationTime ms</div>
+      <div class="@classStyle">Last Move Time: @game.LastMoveTime ms</div>
+      <div class="@classStyle">Request Time: @game.RequestTime ms</div>
     }
   </div>
 </div>

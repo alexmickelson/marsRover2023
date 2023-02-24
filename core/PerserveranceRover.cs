@@ -17,6 +17,8 @@ public class PerserveranceRover
   public event Action OnPathUpdated;
   public IEnumerable<(int x, int y)> Path { get; private set; } =
     new (int, int)[] { };
+  public IEnumerable<(int x, int y)> PathBeforeLast { get; private set; } =
+    new (int, int)[] { };
 
   public IEnumerable<(int x, int y)> GetPath()
   {
@@ -58,30 +60,33 @@ public class PerserveranceRover
     var pathTimer = System.Diagnostics.Stopwatch.StartNew();
     lock (Path)
     {
-      if (Map.OptimizedGrid != null)
-      {
-        Path = MapPath.CalculatePath(
-          Map.OptimizedGrid,
-          CurrentLocation,
-          Target,
-          Map.TopRight,
-          History,
-          optimize
-        );
-      }
-      else
-      {
-        Path = MapPath.CalculatePath(
-          Map.Grid,
-          CurrentLocation,
-          Target,
-          Map.TopRight,
-          History,
-          optimize
-        );
-      }
+      var nextPath =
+        Map.OptimizedGrid != null
+          ? MapPath.CalculatePath(
+            Map.OptimizedGrid,
+            CurrentLocation,
+            Target,
+            Map.TopRight,
+            History,
+            optimize
+          )
+          : MapPath.CalculatePath(
+            Map.Grid,
+            CurrentLocation,
+            Target,
+            Map.TopRight,
+            History,
+            optimize
+          );
+      // if (!nextPath.SequenceEqual(PathBeforeLast))
+      // {
+      //   PathBeforeLast = Path;
+        // Path = nextPath;
+      // }
+
+        Path = nextPath;
       if (StartingPathCost == 0)
-        StartingPathCost = Map.CalculatePathCost(Path);
+        StartingPathCost = Map.CalculatePathCost(Path, CurrentLocation);
     }
     pathTimer.Stop();
     int elapsedMs = (int)pathTimer.ElapsedMilliseconds;
@@ -128,6 +133,7 @@ public class PerserveranceRover
       throw new Exception("Cannot take step if path is empty");
 
     IEnumerable<(int x, int y)> localPath = Path.ToArray();
+
     while (localPath.Contains(CurrentLocation))
       localPath = localPath.Skip(1);
 

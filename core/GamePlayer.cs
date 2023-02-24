@@ -9,11 +9,16 @@ public class GamePlayer
   public PerserveranceRover Rover { get; private set; }
   public List<PerserveranceRover> Rovers { get; private set; } = new();
   public List<IngenuityCopter> Copters { get; set; } = new();
+  public int CoptersComplete { get; set; } = 0;
+  public int CopterPathLaps { get; set; } = 0;
   public bool Turbo { get; set; } = false;
-
   public bool Playing { get; set; } = false;
-
   public int CopterCount { get; set; } = 10;
+  public int SurveyCopterCount { get; set; } = 7;
+  public int LastMoveTime { get; set; }
+  public int RequestTime { get; set; }
+  public int StepInterval { get; set; } = 3;
+  public bool Verbose { get; set; } = false;
 
   public GamePlayer(IGameService gameService)
   {
@@ -31,6 +36,8 @@ public class GamePlayer
         await registerCopterAndRover(name);
       Rovers.Add(rover);
       Copters.Add(copter);
+      if (i % 9 == 0)
+        Thread.Sleep(1000);
     }
 
     var threads = Rovers.Select(r =>
@@ -42,8 +49,8 @@ public class GamePlayer
 
     threads.ToList().ForEach(t => t.Join());
 
-    Rover =
-      Rovers.MinBy(r => r.StartingPathCost)
+    Rover = //Rovers.First();
+      Rovers.MinBy(r => r.StartingPathCost + r.Path.Count())
       ?? throw new Exception("No rovers to choose from");
 
     System.Console.WriteLine("Registered for game");
@@ -107,9 +114,11 @@ public class GamePlayer
         var fullTimer = System.Diagnostics.Stopwatch.StartNew();
         var (start, end, cost, time) = await Rover.Take1Step();
 
-        if (!Map.IsAnEdge(Rover.CurrentLocation) && !Turbo)
+        if (!Map.IsAnEdge(Rover.CurrentLocation))
         {
-          if (Rover.History.Count() % 3 == 0)
+          StepInterval = StepInterval == 4 ? 5 : 4;
+          var historyInterval = Turbo ? 20 : StepInterval;
+          if (Rover.History.Count() % historyInterval == 0)
             Rover.CalculateDetailedPath();
 
           Task.Run(() =>
@@ -123,11 +132,38 @@ public class GamePlayer
 
         fullTimer.Stop();
         var fullTime = (int)fullTimer.ElapsedMilliseconds;
-        System.Console.WriteLine(
-          $"{start.ToString().PadLeft(8, ' ')} -> {end.ToString().PadLeft(8, ' ')}, cost: {cost.ToString().PadLeft(3, ' ')},"
-            + $" time: {fullTime.ToString().PadLeft(4, ' ')},"
-            + $" request time: {time.ToString().PadLeft(4, ' ')} ms"
-        );
+        LastMoveTime = fullTime;
+        RequestTime = time;
+        if (Verbose)
+          System.Console.WriteLine(
+            $"{start.ToString().PadLeft(10, ' ')} -> {end.ToString().PadLeft(10, ' ')}, cost: {cost.ToString().PadLeft(5, ' ')},"
+              + $" time: {fullTime.ToString().PadLeft(5, ' ')},"
+              + $" request time: {time.ToString().PadLeft(5, ' ')} ms"
+          );
+        // var shouldActivateTurbo =
+        //   !Turbo
+        //   && CoptersComplete >= 1
+        //   && (
+        //     (Map.CalculatePathCost(Rover.Path, Rover.CurrentLocation) - 500)
+        //     < Rover.Battery && CopterPathLaps > 3
+        //   );
+        var shouldActivateTurbo =
+          Map.CalculatePathCost(Rover.Path, Rover.CurrentLocation) - 500
+          < Rover.Battery;
+        if (shouldActivateTurbo && !Turbo)
+        {
+          Turbo = true;
+          System.Console.WriteLine("Activating Turbo");
+        }
+        else if (
+          Turbo
+          && Rover.Battery
+            < Map.CalculatePathCost(Rover.Path, Rover.CurrentLocation) + 1000
+        )
+        {
+          Turbo = false;
+          System.Console.WriteLine("Deactivating Turbo");
+        }
       }
     });
     t.Start();
@@ -169,6 +205,8 @@ public class GamePlayer
         {
           await copter1.TakeBestStepOnPath(Rover.GetPath());
         }
+        CopterPathLaps += 1;
+        System.Console.WriteLine($"Copter lap {CopterPathLaps}");
       }
     });
     var roverFollowerThread = new Thread(async () =>
@@ -180,6 +218,7 @@ public class GamePlayer
     });
 
     var pointsGroupedForCopters = groupPointsIntoCopterPaths(restOfCopters);
+    SurveyCopterCount = pointsGroupedForCopters.Count();
 
     var otherThreads = pointsGroupedForCopters.Select(
       (paths, i) =>
@@ -208,12 +247,17 @@ public class GamePlayer
             }
 
             var target = bestPath.Last();
+            // System.Console.WriteLine($"copter target: {target}");
 
             while (c.Location != target)
             {
               await c.TakeStepToTarget(target);
             }
           }
+          CoptersComplete += 1;
+          System.Console.WriteLine(
+            $"Copter Complete: {CoptersComplete} / {SurveyCopterCount}"
+          );
         });
         return t;
       }
@@ -288,10 +332,11 @@ public class GamePlayer
       Rover.StartingLocation.y > Rover.Target.y
         ? Rover.StartingLocation.y
         : Rover.Target.y;
+
     var inBoundsHighX =
-      highX + myBuffer > Map.TopRight.x ? highX + myBuffer : Map.TopRight.x;
+      highX + myBuffer > Map.TopRight.x ? Map.TopRight.x : highX + myBuffer;
     var inBoundsHighY =
-      highY + myBuffer < Map.TopRight.y ? highY + myBuffer : Map.TopRight.y;
+      highY + myBuffer < Map.TopRight.y ? Map.TopRight.y : highY + myBuffer;
     var topRight = (x: inBoundsHighX, y: inBoundsHighY);
     return topRight;
   }
@@ -308,10 +353,11 @@ public class GamePlayer
         ? Rover.StartingLocation.y
         : Rover.Target.y;
 
-    var inBoundsLowX = lowX - myBuffer > 0 ? lowX - myBuffer : 0;
-    var inBoundsLowY = lowY - myBuffer > 0 ? lowY - myBuffer : 0;
+    var inBoundsLowX = (lowX - myBuffer) > 0 ? lowX - myBuffer : 0;
+    var inBoundsLowY = (lowY - myBuffer) > 0 ? lowY - myBuffer : 0;
 
     var bottomLeft = (x: inBoundsLowX, y: inBoundsLowY);
+    System.Console.WriteLine($"bottom left {bottomLeft}");
     return bottomLeft;
   }
 }

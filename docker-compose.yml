@@ -4,4 +4,4 @@ services:
   rover:
     build: .
     scale: 10
-    command: h
+    command: f
