@@ -1,7 +1,12 @@
 version: "3.3"
 
 services:
-  rover:
+  # rover:
+  #   build: .
+  #   scale: 5
+  #   command: f
+  web:
     build: .
-    scale: 10
-    command: f
+    entrypoint: dotnet web.dll
+    ports: 
+    - 0.0.0.0:80:80

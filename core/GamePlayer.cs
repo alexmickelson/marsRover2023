@@ -12,6 +12,7 @@ public class GamePlayer
   public int CoptersComplete { get; set; } = 0;
   public int CopterPathLaps { get; set; } = 0;
   public bool Turbo { get; set; } = false;
+  public bool UserTurbo { get; set; } = false;
   public bool Playing { get; set; } = false;
   public int CopterCount { get; set; } = 10;
   public int SurveyCopterCount { get; set; } = 7;
@@ -136,9 +137,9 @@ public class GamePlayer
         RequestTime = time;
         if (Verbose)
           System.Console.WriteLine(
-            $"{start.ToString().PadLeft(10, ' ')} -> {end.ToString().PadLeft(10, ' ')}, cost: {cost.ToString().PadLeft(5, ' ')},"
-              + $" time: {fullTime.ToString().PadLeft(5, ' ')},"
-              + $" request time: {time.ToString().PadLeft(5, ' ')} ms"
+            $"{start.ToString().PadLeft(10, ' ')} -> {end.ToString().PadLeft(10, ' ')}, cost: {cost.ToString().PadLeft(4, ' ')},"
+              + $" time: {fullTime.ToString().PadLeft(4, ' ')},"
+              + $" request time: {time.ToString().PadLeft(4, ' ')} ms"
           );
         // var shouldActivateTurbo =
         //   !Turbo
@@ -148,22 +149,23 @@ public class GamePlayer
         //     < Rover.Battery && CopterPathLaps > 3
         //   );
         var shouldActivateTurbo =
-          Map.CalculatePathCost(Rover.Path, Rover.CurrentLocation) - 500
-          < Rover.Battery;
+          Map.CalculatePathCost(Rover.Path, Rover.CurrentLocation) - 1000
+          < Rover.Battery || UserTurbo;
         if (shouldActivateTurbo && !Turbo)
         {
           Turbo = true;
           System.Console.WriteLine("Activating Turbo");
         }
-        else if (
-          Turbo
-          && Rover.Battery
-            < Map.CalculatePathCost(Rover.Path, Rover.CurrentLocation) + 1000
-        )
-        {
-          Turbo = false;
-          System.Console.WriteLine("Deactivating Turbo");
-        }
+        // else if (
+        //   Turbo
+        //   && Rover.Battery
+        //     < Map.CalculatePathCost(Rover.Path, Rover.CurrentLocation) + 2000 
+        //   && !UserTurbo
+        // )
+        // {
+        //   Turbo = false;
+        //   System.Console.WriteLine("Deactivating Turbo");
+        // }
       }
     });
     t.Start();
@@ -223,9 +225,9 @@ public class GamePlayer
     var otherThreads = pointsGroupedForCopters.Select(
       (paths, i) =>
       {
+        var c = restOfCopters.ElementAt(i);
         var t = new Thread(async () =>
         {
-          var c = restOfCopters.ElementAt(i);
 
           foreach (var originalPath in paths)
           {

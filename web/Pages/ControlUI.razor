@@ -36,12 +36,13 @@
 
   public void ActivateTurbo()
   {
-    System.Console.WriteLine("activated turbo");
-    game.Turbo = true;
+    System.Console.WriteLine("activated user turbo");
+    game.UserTurbo = true;
   }
   public void DeactivateTurbo()
   {
-    System.Console.WriteLine("stopping turbo");
+    System.Console.WriteLine("stopping user turbo");
+    game.UserTurbo = false;
     game.Turbo = false;
   }
   public string classStyle = " m-5 ";
